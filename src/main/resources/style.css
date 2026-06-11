@@ -1,0 +1,203 @@
+/* Windows 11 Fluent Design System for JavaFX */
+
+.root {
+    /* Color Palette - Default Light Mode */
+    -color-bg: #F3F3F3;
+    -color-surface: #FFFFFF;
+    -color-sidebar-bg: #EEEEEE;
+    -color-text: #1A1A1A;
+    -color-text-secondary: #5F5F5F;
+    -color-accent: #7F77DD;
+    -color-accent-hover: #665DBB;
+    -color-accent-light: #ECEBFC;
+    -color-border: #DCDCDC;
+    -color-card-bg: #FFFFFF;
+    -color-danger: #D83B01;
+    -color-success: #107C41;
+
+    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: -color-bg;
+}
+
+/* Dark Mode Variable Overrides */
+.root.dark {
+    -color-bg: #0F0F0F;
+    -color-surface: #1A1A1A;
+    -color-sidebar-bg: #151515;
+    -color-text: #F5F5F5;
+    -color-text-secondary: #A0A0A0;
+    -color-accent: #7F77DD;
+    -color-accent-hover: #9890EB;
+    -color-accent-light: #2A2650;
+    -color-border: #2D2D2D;
+    -color-card-bg: #1D1D1D;
+    -color-danger: #FF8C00;
+    -color-success: #107C41;
+}
+
+/* Typography & Labels */
+.label {
+    -fx-text-fill: -color-text;
+}
+.title-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text;
+}
+.subtitle-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-text-secondary;
+}
+
+/* Text Fields & Password Fields */
+.text-field, .password-field {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 4px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+    -fx-text-fill: -color-text;
+    -fx-prompt-text-fill: -color-text-secondary;
+    -fx-padding: 8px 12px;
+}
+.text-field:focused, .password-field:focused {
+    -fx-border-color: -color-accent;
+    -fx-background-color: -color-surface;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 4px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+    -fx-text-fill: -color-text;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: -color-bg;
+}
+.button:pressed {
+    -fx-background-color: -color-border;
+}
+
+/* Accent Buttons */
+.button-accent {
+    -fx-background-color: -color-accent;
+    -fx-background-radius: 4px;
+    -fx-border-width: 0px;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+}
+.button-accent:hover {
+    -fx-background-color: -color-accent-hover;
+}
+.button-accent:pressed {
+    -fx-background-color: -color-accent;
+}
+
+/* Danger Buttons */
+.button-danger {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -color-danger;
+    -fx-padding: 4px 8px;
+    -fx-cursor: hand;
+}
+.button-danger:hover {
+    -fx-background-color: #FDE7E9;
+    -fx-background-radius: 4px;
+}
+.root.dark .button-danger:hover {
+    -fx-background-color: #3B1B1B;
+}
+
+/* Cards */
+.card {
+    -fx-background-color: -color-card-bg;
+    -fx-background-radius: 8px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 4, 0, 0, 2);
+}
+.root.dark .card {
+    -fx-effect: none;
+}
+.card:hover {
+    -fx-border-color: -color-accent;
+}
+
+/* Sidebar Navigation Styling */
+.sidebar {
+    -fx-background-color: -color-sidebar-bg;
+    -fx-border-color: -color-border;
+    -fx-border-width: 0 1px 0 0;
+    -fx-padding: 24px 12px;
+}
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-border-width: 0px;
+    -fx-text-fill: -color-text;
+    -fx-alignment: center-left;
+    -fx-padding: 10px 16px;
+    -fx-font-weight: normal;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+.sidebar-button:hover {
+    -fx-background-color: -color-border;
+}
+.sidebar-button.active {
+    -fx-background-color: -color-accent-light;
+    -fx-text-fill: -color-accent;
+    -fx-font-weight: bold;
+}
+
+/* Scroll Pane & List Styling */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-width: 0px;
+}
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Checkbox Modernization */
+.check-box {
+    -fx-text-fill: -color-text;
+}
+.check-box .box {
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}
+.check-box:selected .box {
+    -fx-background-color: -color-accent;
+    -fx-border-color: -color-accent;
+}
+.check-box:selected .mark {
+    -fx-background-color: #FFFFFF;
+}
+
+/* TabPane and DatePicker Customization */
+.date-picker {
+    -fx-background-color: transparent;
+    -fx-border-width: 0px;
+}
+.date-picker > .text-field {
+    -fx-border-width: 1px;
+}
+.date-picker > .button {
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 0 4px 4px 0;
+}

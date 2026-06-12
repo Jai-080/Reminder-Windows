@@ -37,21 +37,41 @@ public class QuickNoteDao {
     public void updateNote(QuickNote note) throws SQLException {
         String sql = "UPDATE quick_notes SET server_id = ?, text = ?, is_completed = ?, position = ?, " +
                 "updated_at = ?, sync_status = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (note.getServerId() != null) {
-                pstmt.setLong(1, note.getServerId());
-            } else {
-                pstmt.setNull(1, Types.BIGINT);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            if (note.getServerId() == null) {
+                Long existingServerId = null;
+                String checkSql = "SELECT server_id FROM quick_notes WHERE id = ?";
+                try (PreparedStatement checkPstmt = conn.prepareStatement(checkSql)) {
+                    checkPstmt.setInt(1, note.getId());
+                    try (ResultSet rs = checkPstmt.executeQuery()) {
+                        if (rs.next()) {
+                            long sid = rs.getLong("server_id");
+                            if (!rs.wasNull()) {
+                                existingServerId = sid;
+                            }
+                        }
+                    }
+                }
+                if (existingServerId != null) {
+                    note.setServerId(existingServerId);
+                }
             }
-            pstmt.setString(2, note.getText());
-            pstmt.setInt(3, note.isCompleted() ? 1 : 0);
-            pstmt.setInt(4, note.getPosition());
-            pstmt.setLong(5, note.getUpdatedAt() != null ? note.getUpdatedAt() : System.currentTimeMillis());
-            pstmt.setString(6, note.getSyncStatus());
-            pstmt.setInt(7, note.getId());
-            
-            pstmt.executeUpdate();
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                if (note.getServerId() != null) {
+                    pstmt.setLong(1, note.getServerId());
+                } else {
+                    pstmt.setNull(1, Types.BIGINT);
+                }
+                pstmt.setString(2, note.getText());
+                pstmt.setInt(3, note.isCompleted() ? 1 : 0);
+                pstmt.setInt(4, note.getPosition());
+                pstmt.setLong(5, note.getUpdatedAt() != null ? note.getUpdatedAt() : System.currentTimeMillis());
+                pstmt.setString(6, note.getSyncStatus());
+                pstmt.setInt(7, note.getId());
+                
+                pstmt.executeUpdate();
+            }
         }
     }
 

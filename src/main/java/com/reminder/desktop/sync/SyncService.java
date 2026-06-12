@@ -173,6 +173,7 @@ public class SyncService {
             if (local.getServerId() != null && "SYNCED".equals(local.getSyncStatus())) {
                 if (!serverIds.contains(local.getServerId())) {
                     reminderDao.deleteReminder(local.getId());
+                    com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelReminder(local);
                 }
             }
         }
@@ -191,6 +192,10 @@ public class SyncService {
                         localReminder.setUpdatedAt(serverMillis);
                         localReminder.setSyncStatus("SYNCED");
                         reminderDao.updateReminder(localReminder);
+                        com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelReminder(localReminder);
+                        if (!localReminder.isExpired() && localReminder.getTime() > System.currentTimeMillis()) {
+                            com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(localReminder);
+                        }
                     }
                 } else {
                     Reminder newReminder = new Reminder(
@@ -204,6 +209,9 @@ public class SyncService {
                             "SYNCED"
                     );
                     reminderDao.insertReminder(newReminder);
+                    if (!newReminder.isExpired() && newReminder.getTime() > System.currentTimeMillis()) {
+                        com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(newReminder);
+                    }
                 }
             }
         }
@@ -254,11 +262,13 @@ public class SyncService {
             if (local.getServerId() != null && "SYNCED".equals(local.getSyncStatus())) {
                 if (!serverIds.contains(local.getServerId())) {
                     paymentDao.deletePayment(local.getId());
+                    com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelPayment(local);
                 }
             }
         }
 
         if (serverPayments != null) {
+            long startOfToday = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
             for (MonthlyPaymentDto dto : serverPayments) {
                 MonthlyPayment localPayment = paymentDao.getPaymentByServerId(dto.getId());
                 long serverMillis = parseInstant(dto.getUpdatedAt());
@@ -271,6 +281,10 @@ public class SyncService {
                         localPayment.setUpdatedAt(serverMillis);
                         localPayment.setSyncStatus("SYNCED");
                         paymentDao.updatePayment(localPayment);
+                        com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelPayment(localPayment);
+                        if (!localPayment.isCompleted() && localPayment.getDueDate() >= startOfToday) {
+                            com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(localPayment);
+                        }
                     }
                 } else {
                     MonthlyPayment newPayment = new MonthlyPayment(
@@ -283,6 +297,9 @@ public class SyncService {
                             "SYNCED"
                     );
                     paymentDao.insertPayment(newPayment);
+                    if (!newPayment.isCompleted() && newPayment.getDueDate() >= startOfToday) {
+                        com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(newPayment);
+                    }
                 }
             }
         }

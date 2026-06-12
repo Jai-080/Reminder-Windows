@@ -38,22 +38,42 @@ public class ReminderDao {
     public void updateReminder(Reminder reminder) throws SQLException {
         String sql = "UPDATE reminders SET server_id = ?, text = ?, time = ?, is_expired = ?, " +
                 "snoozed_time = ?, updated_at = ?, sync_status = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (reminder.getServerId() != null) {
-                pstmt.setLong(1, reminder.getServerId());
-            } else {
-                pstmt.setNull(1, Types.BIGINT);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            if (reminder.getServerId() == null) {
+                Long existingServerId = null;
+                String checkSql = "SELECT server_id FROM reminders WHERE id = ?";
+                try (PreparedStatement checkPstmt = conn.prepareStatement(checkSql)) {
+                    checkPstmt.setInt(1, reminder.getId());
+                    try (ResultSet rs = checkPstmt.executeQuery()) {
+                        if (rs.next()) {
+                            long sid = rs.getLong("server_id");
+                            if (!rs.wasNull()) {
+                                existingServerId = sid;
+                            }
+                        }
+                    }
+                }
+                if (existingServerId != null) {
+                    reminder.setServerId(existingServerId);
+                }
             }
-            pstmt.setString(2, reminder.getText());
-            pstmt.setLong(3, reminder.getTime());
-            pstmt.setInt(4, reminder.isExpired() ? 1 : 0);
-            pstmt.setLong(5, reminder.getSnoozedTime());
-            pstmt.setLong(6, reminder.getUpdatedAt() != null ? reminder.getUpdatedAt() : System.currentTimeMillis());
-            pstmt.setString(7, reminder.getSyncStatus());
-            pstmt.setInt(8, reminder.getId());
-            
-            pstmt.executeUpdate();
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                if (reminder.getServerId() != null) {
+                    pstmt.setLong(1, reminder.getServerId());
+                } else {
+                    pstmt.setNull(1, Types.BIGINT);
+                }
+                pstmt.setString(2, reminder.getText());
+                pstmt.setLong(3, reminder.getTime());
+                pstmt.setInt(4, reminder.isExpired() ? 1 : 0);
+                pstmt.setLong(5, reminder.getSnoozedTime());
+                pstmt.setLong(6, reminder.getUpdatedAt() != null ? reminder.getUpdatedAt() : System.currentTimeMillis());
+                pstmt.setString(7, reminder.getSyncStatus());
+                pstmt.setInt(8, reminder.getId());
+                
+                pstmt.executeUpdate();
+            }
         }
     }
 

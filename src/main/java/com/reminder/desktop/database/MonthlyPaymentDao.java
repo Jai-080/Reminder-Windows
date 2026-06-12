@@ -37,21 +37,44 @@ public class MonthlyPaymentDao {
     public void updatePayment(MonthlyPayment payment) throws SQLException {
         String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
                 "completed = ?, updated_at = ?, sync_status = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (payment.getServerId() != null) {
-                pstmt.setLong(1, payment.getServerId());
-            } else {
-                pstmt.setNull(1, Types.BIGINT);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            if (payment.getServerId() == null) {
+                Long existingServerId = null;
+                String checkSql = "SELECT server_id FROM monthly_payments WHERE id = ?";
+                try (PreparedStatement checkPstmt = conn.prepareStatement(checkSql)) {
+                    checkPstmt.setInt(1, payment.getId());
+                    try (ResultSet rs = checkPstmt.executeQuery()) {
+                        if (rs.next()) {
+                            long sid = rs.getLong("server_id");
+                            if (!rs.wasNull()) {
+                                existingServerId = sid;
+                            }
+                        }
+                    }
+                }
+                if (existingServerId != null) {
+                    payment.setServerId(existingServerId);
+                }
             }
-            pstmt.setString(2, payment.getName());
-            pstmt.setLong(3, payment.getDueDate());
-            pstmt.setInt(4, payment.isCompleted() ? 1 : 0);
-            pstmt.setLong(5, payment.getUpdatedAt() != null ? payment.getUpdatedAt() : System.currentTimeMillis());
-            pstmt.setString(6, payment.getSyncStatus());
-            pstmt.setInt(7, payment.getId());
-            
-            pstmt.executeUpdate();
+
+            System.out.printf("[PAYMENT UPDATE LOG] localId=%d, serverId=%s, syncStatus=%s, updatedAt=%s%n",
+                    payment.getId(), payment.getServerId(), payment.getSyncStatus(), payment.getUpdatedAt());
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                if (payment.getServerId() != null) {
+                    pstmt.setLong(1, payment.getServerId());
+                } else {
+                    pstmt.setNull(1, Types.BIGINT);
+                }
+                pstmt.setString(2, payment.getName());
+                pstmt.setLong(3, payment.getDueDate());
+                pstmt.setInt(4, payment.isCompleted() ? 1 : 0);
+                pstmt.setLong(5, payment.getUpdatedAt() != null ? payment.getUpdatedAt() : System.currentTimeMillis());
+                pstmt.setString(6, payment.getSyncStatus());
+                pstmt.setInt(7, payment.getId());
+                
+                pstmt.executeUpdate();
+            }
         }
     }
 

@@ -102,7 +102,8 @@ public class ReminderScheduler {
 
         ScheduledFuture<?> future = executor.schedule(() -> triggerReminder(reminder), delay, TimeUnit.MILLISECONDS);
         scheduledTasks.put(key, future);
-        System.out.println("Scheduled reminder: " + reminder.getText() + " in " + (delay / 1000) + "s");
+        System.out.printf("[REMINDER SCHEDULER] Scheduling reminder: localId=%d, serverId=%d, time=%d, success=true%n",
+                reminder.getId(), reminder.getServerId() != null ? reminder.getServerId() : -1, reminder.getTime());
     }
 
     public void cancelReminder(Reminder reminder) {
@@ -125,7 +126,8 @@ public class ReminderScheduler {
 
         ScheduledFuture<?> future = executor.schedule(() -> triggerPayment(payment), delay, TimeUnit.MILLISECONDS);
         scheduledTasks.put(key, future);
-        System.out.println("Scheduled payment notification: " + payment.getName() + " in " + (delay / 1000) + "s");
+        System.out.printf("[PAYMENT SCHEDULER] Scheduling payment: localId=%d, serverId=%d, dueDate=%d, success=true%n",
+                payment.getId(), payment.getServerId() != null ? payment.getServerId() : -1, payment.getDueDate());
     }
 
     public void cancelPayment(MonthlyPayment payment) {

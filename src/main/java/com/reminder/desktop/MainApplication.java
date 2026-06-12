@@ -75,6 +75,9 @@ public class MainApplication extends Application {
         // Initialize alarm task scheduler on successful user login/restore
         ReminderScheduler.getInstance().initialize();
 
+        // Trigger background synchronization asynchronously
+        com.reminder.desktop.sync.SyncService.getInstance().triggerSyncAsync(null);
+
         MainLayout mainLayout = new MainLayout(this);
         Scene scene = new Scene(mainLayout, 1050, 680);
         ThemeManager.registerRoot(mainLayout);

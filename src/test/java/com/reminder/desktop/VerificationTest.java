@@ -40,6 +40,7 @@ public class VerificationTest {
             testSchedulerPersistenceAndNotifications();
             testSyncConflictResolution();
             testPhase8Workflows();
+            testPhase9RealServerConflictResolution();
 
             System.out.println("\n=== ALL PHASES PASSED SUCCESSFULLY ===");
             System.exit(0);
@@ -174,6 +175,7 @@ public class VerificationTest {
 
         System.out.println("Updating test note on server...");
         noteResp.setIsCompleted(true);
+        noteResp.setUpdatedAt(String.valueOf(System.currentTimeMillis() + 5000));
         QuickNoteDto noteUpdateResp = client.put("/api/notes/" + noteResp.getId(), noteResp, QuickNoteDto.class);
         if (!noteUpdateResp.getIsCompleted()) {
             throw new Exception("API Note PUT failed to update completed status.");
@@ -296,7 +298,7 @@ public class VerificationTest {
         
         // Resolve conflict (simulate SyncService local sync mapping)
         long serverMillis = Instant.parse(serverDto.getUpdatedAt()).toEpochMilli();
-        if (serverMillis >= localNote.getUpdatedAt()) {
+        if (serverMillis > localNote.getUpdatedAt()) {
             localNote.setText(serverDto.getText());
             localNote.setCompleted(serverDto.getIsCompleted());
             localNote.setUpdatedAt(serverMillis);
@@ -328,7 +330,7 @@ public class VerificationTest {
         
         // Sync resolution logic
         long serverMillisB = Instant.parse(serverDtoB.getUpdatedAt()).toEpochMilli();
-        if (serverMillisB >= resultA.getUpdatedAt()) {
+        if (serverMillisB > resultA.getUpdatedAt()) {
             // Should NOT happen because server is older
             resultA.setText(serverDtoB.getText());
             resultA.setUpdatedAt(serverMillisB);
@@ -512,5 +514,53 @@ public class VerificationTest {
         if (!"SYNCED".equals(syncedReminder.getSyncStatus())) {
             throw new Exception("Offline recovery failed: Reminder remained PENDING.");
         }
+    }
+
+    private static void testPhase9RealServerConflictResolution() throws Exception {
+        System.out.println("\n--- Step 7: Testing Phase 9 Real Server Conflict Resolution (LWW) ---");
+        ApiClient client = ApiClient.getInstance();
+
+        // 1. Create a note on the server
+        QuickNoteDto note = new QuickNoteDto(null, "LWW Test Note Base", false, 0);
+        QuickNoteDto created = client.post("/api/notes", note, QuickNoteDto.class);
+        System.out.println("Created note on server. ID: " + created.getId() + ", UpdatedAt: " + created.getUpdatedAt());
+
+        long serverTime = Instant.parse(created.getUpdatedAt()).toEpochMilli();
+
+        // 2. Attempt update with OLDER timestamp (updatedAt = serverTime - 5000)
+        long olderTime = serverTime - 5000;
+        QuickNoteDto olderUpdate = new QuickNoteDto(created.getId(), "Rejected Older Text", true, 0);
+        olderUpdate.setUpdatedAt(String.valueOf(olderTime));
+        
+        System.out.println("Sending older update (timestamp: " + olderTime + ")...");
+        QuickNoteDto response1 = client.put("/api/notes/" + created.getId(), olderUpdate, QuickNoteDto.class);
+        
+        System.out.println("Server response text: " + response1.getText() + ", UpdatedAt: " + response1.getUpdatedAt());
+        
+        // Assert: The text should still be the base text, not the older text
+        if ("Rejected Older Text".equals(response1.getText())) {
+            throw new Exception("Conflict Resolution Failure: Server accepted older update!");
+        }
+        System.out.println("Successfully verified: Older update was rejected by server.");
+
+        // 3. Attempt update with NEWER timestamp (updatedAt = serverTime + 5000)
+        long newerTime = serverTime + 5000;
+        QuickNoteDto newerUpdate = new QuickNoteDto(created.getId(), "Accepted Newer Text", true, 0);
+        newerUpdate.setUpdatedAt(String.valueOf(newerTime));
+        
+        System.out.println("Sending newer update (timestamp: " + newerTime + ")...");
+        QuickNoteDto response2 = client.put("/api/notes/" + created.getId(), newerUpdate, QuickNoteDto.class);
+        
+        System.out.println("Server response text: " + response2.getText() + ", UpdatedAt: " + response2.getUpdatedAt());
+        
+        // Assert: The text should be the newer text
+        if (!"Accepted Newer Text".equals(response2.getText())) {
+            throw new Exception("Conflict Resolution Failure: Server rejected newer update!");
+        }
+        System.out.println("Successfully verified: Newer update was accepted by server.");
+
+        // Clean up
+        client.delete("/api/notes/" + created.getId());
+        System.out.println("Cleaned up server test note.");
     }
 }

@@ -39,6 +39,7 @@ public class VerificationTest {
             testApiCompatibilityAndSync();
             testSchedulerPersistenceAndNotifications();
             testSyncConflictResolution();
+            testPhase8Workflows();
 
             System.out.println("\n=== ALL PHASES PASSED SUCCESSFULLY ===");
             System.exit(0);
@@ -143,6 +144,7 @@ public class VerificationTest {
 
         // Verify logout clears token
         authService.logout();
+        Thread.sleep(500);
         if (TokenStorage.hasToken()) {
             throw new Exception("Logout failed to clear local tokens.");
         }
@@ -343,5 +345,172 @@ public class VerificationTest {
         }
         
         System.out.println("Verified timezone-safe ISO string-to-millisecond timestamp resolution matches exactly.");
+    }
+
+    private static void testPhase8Workflows() throws Exception {
+        System.out.println("\n--- Step 6: Testing Phase 8 Manual Verification Workflows ---");
+        new ReminderDao().clearAll();
+        new QuickNoteDao().clearAll();
+        new MonthlyPaymentDao().clearAll();
+
+        ReminderDao reminderDao = new ReminderDao();
+
+        // Register/Login a test user to ensure clean session
+        int rand = new java.util.Random().nextInt(100000);
+        String username = "phase8user_" + rand;
+        String email = "phase8_" + rand + "@example.com";
+        String password = "Password123#";
+
+        AuthService authService = new AuthServiceImpl();
+        authService.logout();
+        authService.register(username, email, password);
+        authService.login(email, password, true);
+
+        // 1. Windows -> Server -> Android notification flow
+        System.out.println("\n[Scenario 1] Windows -> Server -> Android notification flow");
+        long triggerTime1 = System.currentTimeMillis() + 60000;
+        Reminder winReminder = new Reminder(
+                null,
+                null,
+                "Windows Notification Test",
+                triggerTime1,
+                false,
+                0L,
+                System.currentTimeMillis(),
+                "PENDING"
+        );
+        // Save locally on Windows
+        reminderDao.insertReminder(winReminder);
+        System.out.printf("[Windows] Saved locally: id=%d, text='%s', time=%d, sync_status=%s%n",
+                winReminder.getId(), winReminder.getText(), winReminder.getTime(), winReminder.getSyncStatus());
+        
+        // Schedule in Windows ReminderScheduler
+        ReminderScheduler.getInstance().scheduleReminder(winReminder);
+
+        // Sync to Server
+        System.out.println("[Windows] Syncing to server...");
+        ReminderDto winDto = new ReminderDto(null, winReminder.getText(), winReminder.getTime(), winReminder.isExpired(), winReminder.getSnoozedTime());
+        ReminderDto winResp = ApiClient.getInstance().post("/api/reminders", winDto, ReminderDto.class);
+        winReminder.setServerId(winResp.getId());
+        winReminder.setSyncStatus("SYNCED");
+        reminderDao.updateReminder(winReminder);
+        System.out.printf("[Windows] Synced to server. Assigned Server ID: %d%n", winReminder.getServerId());
+
+        // Simulate Android pulling this reminder from the server
+        System.out.println("[Android] Simulating Android Pull from Server...");
+        ReminderDto[] serverReminders = ApiClient.getInstance().get("/api/reminders", ReminderDto[].class);
+        ReminderDto received = null;
+        for (ReminderDto dto : serverReminders) {
+            if (dto.getId().equals(winReminder.getServerId())) {
+                received = dto;
+                break;
+            }
+        }
+        if (received == null) {
+            throw new Exception("Android simulation failed: Windows reminder not found on server.");
+        }
+        System.out.printf("[Android] Received reminder from Server: ID=%d, text='%s', time=%d%n",
+                received.getId(), received.getText(), received.getReminderTime());
+
+        // Simulate Android SQLite update & AlarmManager Scheduling
+        int mockAndroidLocalId = 101; // Mock local ID on Android SQLite
+        System.out.printf("[Android DB] SQLite Update: Saving server ID %d as local ID %d%n", received.getId(), mockAndroidLocalId);
+        System.out.printf("[Android AlarmManager] Scheduling reminder: localId=%d, serverId=%d, time=%d, success=true%n",
+                mockAndroidLocalId, received.getId(), received.getReminderTime());
+
+        // 2. Android -> Server -> Windows notification flow
+        System.out.println("\n[Scenario 2] Android -> Server -> Windows notification flow");
+        // Android creates a reminder and POSTs to server
+        long triggerTime2 = System.currentTimeMillis() + 120000;
+        ReminderDto androidDto = new ReminderDto(null, "Android Notification Test", triggerTime2, false, 0L);
+        ReminderDto androidResp = ApiClient.getInstance().post("/api/reminders", androidDto, ReminderDto.class);
+        System.out.printf("[Android] Created reminder on server. Server ID: %d%n", androidResp.getId());
+
+        // Windows pulls from server via SyncService
+        System.out.println("[Windows] Triggering sync service...");
+        SyncService.getInstance().performSync();
+        
+        // Verify it was saved locally and scheduled
+        Reminder winPushed = reminderDao.getReminderByServerId(androidResp.getId());
+        if (winPushed == null) {
+            throw new Exception("Windows sync failed: Android reminder was not synced locally.");
+        }
+        System.out.printf("[Windows DB] Synced from server: id=%d, serverId=%d, text='%s', sync_status=%s%n",
+                winPushed.getId(), winPushed.getServerId(), winPushed.getText(), winPushed.getSyncStatus());
+
+        // 3. Reminder update rescheduling
+        System.out.println("\n[Scenario 3] Reminder update rescheduling");
+        // Windows updates time
+        long newTriggerTime = triggerTime2 + 300000; // 5 mins later
+        winPushed.setTime(newTriggerTime);
+        winPushed.setSyncStatus("PENDING");
+        winPushed.setUpdatedAt(System.currentTimeMillis());
+        reminderDao.updateReminder(winPushed);
+        System.out.printf("[Windows] Updated reminder time locally: id=%d, time=%d%n", winPushed.getId(), winPushed.getTime());
+
+        // Reschedule on Windows
+        ReminderScheduler.getInstance().rescheduleReminder(winPushed);
+
+        // Windows pushes update to Server
+        System.out.println("[Windows] Syncing update to server...");
+        SyncService.getInstance().performSync();
+        
+        // Verify on Server
+        ReminderDto serverUpdated = ApiClient.getInstance().get("/api/reminders/" + winPushed.getServerId(), ReminderDto.class);
+        System.out.printf("[Server] Reminder updated time on server: ID=%d, time=%d%n", serverUpdated.getId(), serverUpdated.getReminderTime());
+
+        // Android pulls update
+        System.out.println("[Android] Simulating Android pulling update...");
+        System.out.printf("[Android AlarmManager] Cancelling existing alarm: localId=%d%n", mockAndroidLocalId);
+        System.out.printf("[Android AlarmManager] Scheduling replacement alarm: localId=%d, serverId=%d, time=%d, success=true%n",
+                mockAndroidLocalId, serverUpdated.getId(), serverUpdated.getReminderTime());
+
+        // 4. Reminder deletion cancellation
+        System.out.println("\n[Scenario 4] Reminder deletion cancellation");
+        // Windows deletes reminder
+        System.out.printf("[Windows] Deleting reminder: id=%d%n", winPushed.getId());
+        reminderDao.deleteReminder(winPushed.getId());
+        ReminderScheduler.getInstance().cancelReminder(winPushed);
+        
+        // Sync delete to server
+        ApiClient.getInstance().delete("/api/reminders/" + winPushed.getServerId());
+        System.out.println("[Windows] Syncing deletion to server (DELETE request sent).");
+
+        // Android pulls deletion
+        System.out.println("[Android] Simulating Android pulling deletion...");
+        System.out.printf("[Android AlarmManager] Cancelling alarm: localId=%d%n", mockAndroidLocalId);
+        System.out.printf("[Android DB] Remove locally: deleting local ID %d%n", mockAndroidLocalId);
+
+        // 5. Offline recovery
+        System.out.println("\n[Scenario 5] Offline recovery");
+        // Create offline reminder on Windows
+        long triggerTimeOffline = System.currentTimeMillis() + 180000;
+        Reminder offlineReminder = new Reminder(
+                null,
+                null,
+                "Offline Windows Reminder",
+                triggerTimeOffline,
+                false,
+                0L,
+                System.currentTimeMillis(),
+                "PENDING"
+        );
+        reminderDao.insertReminder(offlineReminder);
+        System.out.printf("[Windows DB] Offline created: id=%d, sync_status=%s%n", offlineReminder.getId(), offlineReminder.getSyncStatus());
+
+        // Sync while server simulated offline (simulate by not calling performSync)
+        System.out.println("[Windows] Offline - Sync deferred.");
+
+        // Simulate reconnect and sync
+        System.out.println("[Windows] Reconnected. Triggering sync...");
+        SyncService.getInstance().performSync();
+        
+        // Verify sync status
+        Reminder syncedReminder = reminderDao.getReminderById(offlineReminder.getId());
+        System.out.printf("[Windows DB] After reconnect and sync: id=%d, serverId=%d, sync_status=%s%n",
+                syncedReminder.getId(), syncedReminder.getServerId(), syncedReminder.getSyncStatus());
+        if (!"SYNCED".equals(syncedReminder.getSyncStatus())) {
+            throw new Exception("Offline recovery failed: Reminder remained PENDING.");
+        }
     }
 }

@@ -106,7 +106,7 @@ public class SyncService {
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 
                 if (localNote != null) {
-                    if (serverMillis >= localNote.getUpdatedAt()) {
+                    if (serverMillis > localNote.getUpdatedAt()) {
                         // Overwrite local with server changes
                         localNote.setText(dto.getText());
                         localNote.setCompleted(dto.getIsCompleted());
@@ -135,6 +135,7 @@ public class SyncService {
         List<QuickNote> pendingNotes = noteDao.getPendingNotes();
         for (QuickNote local : pendingNotes) {
             QuickNoteDto dto = new QuickNoteDto(local.getServerId(), local.getText(), local.isCompleted(), local.getPosition());
+            dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
             if (local.getServerId() == null) {
                 // POST to create
                 QuickNoteDto responseDto = apiClient.post("/api/notes", dto, QuickNoteDto.class);
@@ -184,7 +185,7 @@ public class SyncService {
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 
                 if (localReminder != null) {
-                    if (serverMillis >= localReminder.getUpdatedAt()) {
+                    if (serverMillis > localReminder.getUpdatedAt()) {
                         localReminder.setText(dto.getText());
                         localReminder.setTime(dto.getReminderTime());
                         localReminder.setExpired(dto.getIsExpired() != null && dto.getIsExpired());
@@ -226,6 +227,7 @@ public class SyncService {
                     local.isExpired(),
                     local.getSnoozedTime()
             );
+            dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
             if (local.getServerId() == null) {
                 ReminderDto responseDto = apiClient.post("/api/reminders", dto, ReminderDto.class);
                 local.setServerId(responseDto.getId());
@@ -274,7 +276,7 @@ public class SyncService {
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 
                 if (localPayment != null) {
-                    if (serverMillis >= localPayment.getUpdatedAt()) {
+                    if (serverMillis > localPayment.getUpdatedAt()) {
                         localPayment.setName(dto.getName());
                         localPayment.setDueDate(dto.getDueDate());
                         localPayment.setCompleted(dto.getCompleted() != null && dto.getCompleted());
@@ -313,6 +315,7 @@ public class SyncService {
                     local.getDueDate(),
                     local.isCompleted()
             );
+            dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
             if (local.getServerId() == null) {
                 MonthlyPaymentDto responseDto = apiClient.post("/api/payments", dto, MonthlyPaymentDto.class);
                 local.setServerId(responseDto.getId());

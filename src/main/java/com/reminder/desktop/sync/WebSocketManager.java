@@ -88,7 +88,6 @@ public class WebSocketManager {
     private class WebSocketListenerImpl implements WebSocket.Listener {
         @Override
         public void onOpen(WebSocket ws) {
-            System.out.println("WebSocketManager: WebSocket transport opened. Sending STOMP CONNECT.");
             synchronized (WebSocketManager.this) {
                 webSocket = ws;
             }
@@ -98,6 +97,7 @@ public class WebSocketManager {
                     "Authorization:Bearer " + TokenStorage.getAccessToken() + "\n" +
                     "\n" +
                     "\u0000";
+            System.out.println("WebSocketManager: STOMP Frame Outgoing [CONNECT]:\n" + connectFrame);
             ws.sendText(connectFrame, true);
             ws.request(1);
         }
@@ -152,17 +152,18 @@ public class WebSocketManager {
         System.out.println("WebSocketManager: Received STOMP command " + command);
 
         if ("CONNECTED".equals(command)) {
+            System.out.println("WebSocketManager: STOMP Frame Incoming [CONNECTED]:\n" + frameText);
             synchronized (this) {
                 isConnected = true;
                 isConnecting = false;
                 reconnectAttempts = 0;
             }
-            System.out.println("WebSocketManager: STOMP Connected. Subscribing to user sync channel.");
             String subscribeFrame = "SUBSCRIBE\n" +
                     "id:sub-0\n" +
                     "destination:/user/topic/sync\n" +
                     "\n" +
                     "\u0000";
+            System.out.println("WebSocketManager: STOMP Frame Outgoing [SUBSCRIBE]:\n" + subscribeFrame);
             if (webSocket != null) {
                 webSocket.sendText(subscribeFrame, true);
             }
@@ -172,6 +173,7 @@ public class WebSocketManager {
             SyncService.getInstance().syncAll();
 
         } else if ("MESSAGE".equals(command)) {
+            System.out.println("WebSocketManager: STOMP Frame Incoming [MESSAGE]:\n" + frameText);
             int bodyStartIndex = -1;
             for (int i = 1; i < lines.length; i++) {
                 if (lines[i].trim().isEmpty()) {
@@ -193,15 +195,15 @@ public class WebSocketManager {
                 SyncService.getInstance().syncAll();
             }
         } else if ("ERROR".equals(command)) {
-            System.err.println("WebSocketManager: STOMP Error frame received: " + frameText);
+            System.err.println("WebSocketManager: STOMP Frame Incoming [ERROR]:\n" + frameText);
         }
     }
 
     public synchronized void disconnect() {
         userWantsConnection = false;
         if (webSocket != null) {
-            System.out.println("WebSocketManager: Disconnecting WebSocket...");
             String disconnectFrame = "DISCONNECT\n\n\u0000";
+            System.out.println("WebSocketManager: STOMP Frame Outgoing [DISCONNECT]:\n" + disconnectFrame);
             try {
                 webSocket.sendText(disconnectFrame, true);
             } catch (Exception ignored) {}

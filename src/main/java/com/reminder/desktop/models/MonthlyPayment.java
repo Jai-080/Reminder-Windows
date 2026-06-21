@@ -10,6 +10,7 @@ public class MonthlyPayment {
     private String syncStatus;
     private Double amount;
     private RecurrenceType recurrence = RecurrenceType.MONTHLY;
+    private String notificationOffsets = "0";
 
     public MonthlyPayment() {
     }
@@ -24,6 +25,7 @@ public class MonthlyPayment {
         this.syncStatus = syncStatus;
         this.amount = null;
         this.recurrence = RecurrenceType.MONTHLY;
+        this.notificationOffsets = "0";
     }
 
     public MonthlyPayment(Integer id, Long serverId, String name, long dueDate, boolean completed, Long updatedAt, String syncStatus, Double amount) {
@@ -36,6 +38,7 @@ public class MonthlyPayment {
         this.syncStatus = syncStatus;
         this.amount = amount;
         this.recurrence = RecurrenceType.MONTHLY;
+        this.notificationOffsets = "0";
     }
 
     public MonthlyPayment(Integer id, Long serverId, String name, long dueDate, boolean completed, Long updatedAt, String syncStatus, Double amount, RecurrenceType recurrence) {
@@ -48,6 +51,20 @@ public class MonthlyPayment {
         this.syncStatus = syncStatus;
         this.amount = amount;
         this.recurrence = recurrence;
+        this.notificationOffsets = "0";
+    }
+
+    public MonthlyPayment(Integer id, Long serverId, String name, long dueDate, boolean completed, Long updatedAt, String syncStatus, Double amount, RecurrenceType recurrence, String notificationOffsets) {
+        this.id = id;
+        this.serverId = serverId;
+        this.name = name;
+        this.dueDate = dueDate;
+        this.completed = completed;
+        this.updatedAt = updatedAt;
+        this.syncStatus = syncStatus;
+        this.amount = amount;
+        this.recurrence = recurrence;
+        this.notificationOffsets = notificationOffsets;
     }
 
     public Integer getId() {
@@ -118,6 +135,7 @@ public class MonthlyPayment {
                 ", syncStatus='" + syncStatus + '\'' +
                 ", amount=" + amount +
                 ", recurrence=" + recurrence +
+                ", notificationOffsets='" + notificationOffsets + '\'' +
                 '}';
     }
 
@@ -135,5 +153,13 @@ public class MonthlyPayment {
 
     public void setRecurrence(RecurrenceType recurrence) {
         this.recurrence = recurrence;
+    }
+
+    public String getNotificationOffsets() {
+        return notificationOffsets;
+    }
+
+    public void setNotificationOffsets(String notificationOffsets) {
+        this.notificationOffsets = notificationOffsets;
     }
 }

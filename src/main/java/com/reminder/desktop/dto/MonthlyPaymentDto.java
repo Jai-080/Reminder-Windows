@@ -10,6 +10,7 @@ public class MonthlyPaymentDto {
     private Boolean completed;
     private Double amount;
     private String recurrence;
+    private String notificationOffsets;
     private String createdAt;
     private String updatedAt;
 
@@ -23,6 +24,7 @@ public class MonthlyPaymentDto {
         this.completed = completed;
         this.amount = null;
         this.recurrence = "MONTHLY";
+        this.notificationOffsets = "0";
     }
 
     public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount) {
@@ -32,6 +34,7 @@ public class MonthlyPaymentDto {
         this.completed = completed;
         this.amount = amount;
         this.recurrence = "MONTHLY";
+        this.notificationOffsets = "0";
     }
 
     public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount, String recurrence) {
@@ -41,6 +44,17 @@ public class MonthlyPaymentDto {
         this.completed = completed;
         this.amount = amount;
         this.recurrence = recurrence;
+        this.notificationOffsets = "0";
+    }
+
+    public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount, String recurrence, String notificationOffsets) {
+        this.id = id;
+        this.name = name;
+        this.dueDate = dueDate;
+        this.completed = completed;
+        this.amount = amount;
+        this.recurrence = recurrence;
+        this.notificationOffsets = notificationOffsets;
     }
 
     public Long getId() {
@@ -105,5 +119,13 @@ public class MonthlyPaymentDto {
 
     public void setRecurrence(String recurrence) {
         this.recurrence = recurrence;
+    }
+
+    public String getNotificationOffsets() {
+        return notificationOffsets;
+    }
+
+    public void setNotificationOffsets(String notificationOffsets) {
+        this.notificationOffsets = notificationOffsets;
     }
 }

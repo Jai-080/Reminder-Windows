@@ -24,6 +24,9 @@ public class MainApplication extends Application {
             if (instance != null) {
                 // Clear session
                 com.reminder.desktop.auth.TokenStorage.clearSession();
+                // Disconnect WebSocket and stop scheduler
+                com.reminder.desktop.sync.WebSocketManager.getInstance().disconnect();
+                com.reminder.desktop.sync.SyncService.getInstance().stopPeriodicSync();
                 // Cancel all scheduler checks
                 com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelAll();
                 // Show notification warning
@@ -75,6 +78,10 @@ public class MainApplication extends Application {
         // Initialize alarm task scheduler on successful user login/restore
         ReminderScheduler.getInstance().initialize();
 
+        // Phase 11: Connect WebSocket and Phase 13: Start periodic background sync
+        com.reminder.desktop.sync.WebSocketManager.getInstance().connect();
+        com.reminder.desktop.sync.SyncService.getInstance().startPeriodicSync();
+
         // Trigger background synchronization asynchronously
         com.reminder.desktop.sync.SyncService.getInstance().triggerSyncAsync(null);
 
@@ -87,6 +94,8 @@ public class MainApplication extends Application {
     @Override
     public void stop() {
         // Clean up scheduler background tasks on app exit
+        com.reminder.desktop.sync.WebSocketManager.getInstance().disconnect();
+        com.reminder.desktop.sync.SyncService.getInstance().stopPeriodicSync();
         ReminderScheduler.getInstance().cancelAll();
         System.out.println("Reminder Desktop application stopped successfully.");
     }

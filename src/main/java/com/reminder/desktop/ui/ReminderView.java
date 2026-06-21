@@ -113,12 +113,26 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         // Initial Load
         controller.loadReminders(this);
 
+        // Dynamic sync finished listener registration
+        Runnable syncListener = () -> {
+            System.out.println("ReminderView: Sync completed, reloading reminders.");
+            controller.loadReminders(this);
+        };
+
         // Auto cleanup listener on layout unload
         this.sceneProperty().addListener((observable, oldScene, newScene) -> {
-            if (newScene == null) {
+            if (newScene != null) {
+                com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+                controller.loadReminders(this);
+            } else {
+                com.reminder.desktop.sync.SyncService.removeSyncFinishedListener(syncListener);
                 ReminderScheduler.getInstance().unregisterListener(this);
             }
         });
+
+        if (this.getScene() != null) {
+            com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+        }
     }
 
     public void displayReminders(List<Reminder> pending, List<Reminder> expired) {

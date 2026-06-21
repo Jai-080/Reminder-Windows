@@ -18,6 +18,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SyncService {
     private static SyncService instance;
+    private static final List<Runnable> globalListeners = new CopyOnWriteArrayList<>();
+
+    public static void addSyncFinishedListener(Runnable listener) {
+        globalListeners.add(listener);
+    }
+
+    public static void removeSyncFinishedListener(Runnable listener) {
+        globalListeners.remove(listener);
+    }
+
     private final ApiClient apiClient;
     private final QuickNoteDao noteDao;
     private final ReminderDao reminderDao;
@@ -34,6 +44,7 @@ public class SyncService {
         return t;
     });
     private ScheduledFuture<?> retryFuture;
+    private ScheduledFuture<?> periodicSyncFuture;
 
     public interface SyncListener {
         void onSyncStarted();
@@ -78,6 +89,31 @@ public class SyncService {
         retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
     }
 
+    public void syncAll() {
+        triggerSyncAsync(null);
+    }
+
+    public synchronized void startPeriodicSync() {
+        if (periodicSyncFuture != null && !periodicSyncFuture.isDone()) {
+            return;
+        }
+        System.out.println("WebSocketSync: Starting 5-minute periodic sync background scheduler.");
+        periodicSyncFuture = scheduler.scheduleAtFixedRate(() -> {
+            if (TokenStorage.hasToken()) {
+                System.out.println("WebSocketSync: Periodic background sync triggered.");
+                syncAll();
+            }
+        }, 5, 5, TimeUnit.MINUTES);
+    }
+
+    public synchronized void stopPeriodicSync() {
+        if (periodicSyncFuture != null) {
+            System.out.println("WebSocketSync: Stopping periodic sync background scheduler.");
+            periodicSyncFuture.cancel(true);
+            periodicSyncFuture = null;
+        }
+    }
+
     public void triggerSyncAsync(SyncListener listener) {
         if (!TokenStorage.hasToken()) {
             if (listener != null) listener.onSyncFinished(false, "Not authenticated.");
@@ -85,6 +121,7 @@ public class SyncService {
         }
         
         executor.submit(() -> {
+            System.out.println("syncAll started");
             if (!syncRunning.compareAndSet(false, true)) {
                 System.out.println("Sync already in progress, skipping trigger.");
                 if (listener != null) listener.onSyncFinished(false, "Sync already in progress.");
@@ -95,6 +132,10 @@ public class SyncService {
                 performSync();
                 TokenStorage.setLastSyncTimestamp(System.currentTimeMillis());
                 resetRetryDelay(); // Success: reset backoff
+                System.out.println("syncAll completed");
+                for (Runnable r : globalListeners) {
+                    javafx.application.Platform.runLater(r);
+                }
                 if (listener != null) listener.onSyncFinished(true, "Synchronized successfully.");
             } catch (Exception e) {
                 System.err.println("Synchronization failed: " + e.getMessage());

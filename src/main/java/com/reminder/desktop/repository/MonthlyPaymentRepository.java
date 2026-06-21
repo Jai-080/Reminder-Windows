@@ -88,21 +88,17 @@ public class MonthlyPaymentRepository {
 
     public void deletePayment(MonthlyPayment payment) throws Exception {
         if (payment.getId() != null) {
-            paymentDao.deletePayment(payment.getId());
+            if (payment.getServerId() == null) {
+                paymentDao.deletePayment(payment.getId());
+            } else {
+                paymentDao.softDeletePayment(payment.getId());
+            }
         }
 
         // Cancel schedule
         ReminderScheduler.getInstance().cancelPayment(payment);
 
-        if (payment.getServerId() != null) {
-            long serverId = payment.getServerId();
-            new Thread(() -> {
-                try {
-                    ApiClient.getInstance().delete("/api/payments/" + serverId);
-                } catch (Exception e) {
-                    System.err.println("Failed to delete payment on server: " + e.getMessage());
-                }
-            }).start();
-        }
+        // Trigger background sync
+        SyncService.getInstance().triggerSyncAsync(null);
     }
 }

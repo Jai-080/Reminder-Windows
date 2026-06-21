@@ -108,21 +108,17 @@ public class ReminderRepository {
 
     public void deleteReminder(Reminder reminder) throws Exception {
         if (reminder.getId() != null) {
-            reminderDao.deleteReminder(reminder.getId());
+            if (reminder.getServerId() == null) {
+                reminderDao.deleteReminder(reminder.getId());
+            } else {
+                reminderDao.softDeleteReminder(reminder.getId());
+            }
         }
 
         // Cancel schedule
         ReminderScheduler.getInstance().cancelReminder(reminder);
 
-        if (reminder.getServerId() != null) {
-            long serverId = reminder.getServerId();
-            new Thread(() -> {
-                try {
-                    ApiClient.getInstance().delete("/api/reminders/" + serverId);
-                } catch (Exception e) {
-                    System.err.println("Failed to delete reminder on server: " + e.getMessage());
-                }
-            }).start();
-        }
+        // Trigger background sync
+        SyncService.getInstance().triggerSyncAsync(null);
     }
 }

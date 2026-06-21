@@ -87,6 +87,16 @@ public class MonthlyPaymentDao {
         }
     }
 
+    public void softDeletePayment(int id) throws SQLException {
+        String sql = "UPDATE monthly_payments SET sync_status = 'DELETE_PENDING', updated_at = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, System.currentTimeMillis());
+            pstmt.setInt(2, id);
+            pstmt.executeUpdate();
+        }
+    }
+
     public void clearAll() throws SQLException {
         String sql = "DELETE FROM monthly_payments";
         try (Connection conn = DatabaseManager.getConnection();
@@ -125,7 +135,20 @@ public class MonthlyPaymentDao {
 
     public List<MonthlyPayment> getAllPayments() throws SQLException {
         List<MonthlyPayment> payments = new ArrayList<>();
-        String sql = "SELECT * FROM monthly_payments ORDER BY due_date ASC";
+        String sql = "SELECT * FROM monthly_payments WHERE sync_status IS NULL OR (sync_status != 'DELETE_PENDING' AND sync_status != 'DELETE_SYNCED') ORDER BY due_date ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                payments.add(mapRow(rs));
+            }
+        }
+        return payments;
+    }
+
+    public List<MonthlyPayment> getDeletedPayments() throws SQLException {
+        List<MonthlyPayment> payments = new ArrayList<>();
+        String sql = "SELECT * FROM monthly_payments WHERE sync_status = 'DELETE_PENDING'";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

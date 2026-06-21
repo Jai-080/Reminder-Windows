@@ -69,19 +69,14 @@ public class QuickNoteRepository {
 
     public void deleteNote(QuickNote note) throws Exception {
         if (note.getId() != null) {
-            noteDao.deleteNote(note.getId());
+            if (note.getServerId() == null) {
+                noteDao.deleteNote(note.getId());
+            } else {
+                noteDao.softDeleteNote(note.getId());
+            }
         }
 
-        if (note.getServerId() != null) {
-            // Trigger background API deletion (best effort)
-            long serverId = note.getServerId();
-            new Thread(() -> {
-                try {
-                    ApiClient.getInstance().delete("/api/notes/" + serverId);
-                } catch (Exception e) {
-                    System.err.println("Failed to delete note on server: " + e.getMessage());
-                }
-            }).start();
-        }
+        // Trigger background sync (non-blocking)
+        SyncService.getInstance().triggerSyncAsync(null);
     }
 }

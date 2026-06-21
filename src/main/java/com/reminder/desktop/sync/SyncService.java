@@ -1,7 +1,5 @@
 package com.reminder.desktop.sync;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.reminder.desktop.auth.TokenStorage;
 import com.reminder.desktop.database.QuickNoteDao;
 import com.reminder.desktop.database.ReminderDao;
@@ -15,8 +13,8 @@ import com.reminder.desktop.models.MonthlyPayment;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SyncService {
     private static SyncService instance;
@@ -25,6 +23,17 @@ public class SyncService {
     private final ReminderDao reminderDao;
     private final MonthlyPaymentDao paymentDao;
     private final ExecutorService executor;
+
+    // Phase 10: Concurrency safety and exponential backoff
+    private final AtomicBoolean syncRunning = new AtomicBoolean(false);
+    private long retryDelayMs = 5000;
+    private static final long MAX_RETRY_DELAY_MS = 300000;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "SyncScheduler");
+        t.setDaemon(true);
+        return t;
+    });
+    private ScheduledFuture<?> retryFuture;
 
     public interface SyncListener {
         void onSyncStarted();
@@ -50,6 +59,25 @@ public class SyncService {
         return instance;
     }
 
+    private synchronized void resetRetryDelay() {
+        retryDelayMs = 5000;
+        if (retryFuture != null) {
+            retryFuture.cancel(false);
+            retryFuture = null;
+        }
+    }
+
+    private synchronized void scheduleRetry() {
+        if (retryFuture != null && !retryFuture.isDone()) {
+            return;
+        }
+        System.out.println("Scheduling sync retry in " + (retryDelayMs / 1000) + " seconds...");
+        retryFuture = scheduler.schedule(() -> {
+            triggerSyncAsync(null);
+        }, retryDelayMs, TimeUnit.MILLISECONDS);
+        retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
+    }
+
     public void triggerSyncAsync(SyncListener listener) {
         if (!TokenStorage.hasToken()) {
             if (listener != null) listener.onSyncFinished(false, "Not authenticated.");
@@ -57,14 +85,23 @@ public class SyncService {
         }
         
         executor.submit(() -> {
+            if (!syncRunning.compareAndSet(false, true)) {
+                System.out.println("Sync already in progress, skipping trigger.");
+                if (listener != null) listener.onSyncFinished(false, "Sync already in progress.");
+                return;
+            }
             if (listener != null) listener.onSyncStarted();
             try {
                 performSync();
                 TokenStorage.setLastSyncTimestamp(System.currentTimeMillis());
+                resetRetryDelay(); // Success: reset backoff
                 if (listener != null) listener.onSyncFinished(true, "Synchronized successfully.");
             } catch (Exception e) {
                 System.err.println("Synchronization failed: " + e.getMessage());
+                scheduleRetry(); // Failure: schedule backoff retry
                 if (listener != null) listener.onSyncFinished(false, e.getMessage());
+            } finally {
+                syncRunning.set(false);
             }
         });
     }
@@ -76,6 +113,29 @@ public class SyncService {
     }
 
     private void syncNotes() throws Exception {
+        // 0. Process Deletions First
+        List<QuickNote> deletedNotes = noteDao.getDeletedNotes();
+        java.util.Set<Long> deletedServerIds = new java.util.HashSet<>();
+        for (QuickNote note : deletedNotes) {
+            if (note.getServerId() != null) {
+                deletedServerIds.add(note.getServerId());
+                try {
+                    apiClient.delete("/api/notes/" + note.getServerId());
+                    note.setSyncStatus("DELETE_SYNCED");
+                    noteDao.deleteNote(note.getId());
+                } catch (Exception e) {
+                    if (e.getMessage() != null && (e.getMessage().contains("404") || e.getMessage().toLowerCase().contains("not found"))) {
+                        noteDao.deleteNote(note.getId());
+                    } else {
+                        System.err.println("Failed to sync delete note offline: " + e.getMessage());
+                        throw e;
+                    }
+                }
+            } else {
+                noteDao.deleteNote(note.getId());
+            }
+        }
+
         // 1. Pull from Server (Direct array reading to optimize performance)
         QuickNoteDto[] serverNotes = apiClient.get("/api/notes", QuickNoteDto[].class);
         
@@ -102,6 +162,10 @@ public class SyncService {
 
         if (serverNotes != null) {
             for (QuickNoteDto dto : serverNotes) {
+                if (dto.getId() != null && deletedServerIds.contains(dto.getId())) {
+                    continue; // Skip locally deleted notes
+                }
+
                 QuickNote localNote = noteDao.getNoteByServerId(dto.getId());
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 
@@ -154,6 +218,29 @@ public class SyncService {
     }
 
     private void syncReminders() throws Exception {
+        // 0. Process Deletions First
+        List<Reminder> deletedReminders = reminderDao.getDeletedReminders();
+        java.util.Set<Long> deletedServerIds = new java.util.HashSet<>();
+        for (Reminder reminder : deletedReminders) {
+            if (reminder.getServerId() != null) {
+                deletedServerIds.add(reminder.getServerId());
+                try {
+                    apiClient.delete("/api/reminders/" + reminder.getServerId());
+                    reminder.setSyncStatus("DELETE_SYNCED");
+                    reminderDao.deleteReminder(reminder.getId());
+                } catch (Exception e) {
+                    if (e.getMessage() != null && (e.getMessage().contains("404") || e.getMessage().toLowerCase().contains("not found"))) {
+                        reminderDao.deleteReminder(reminder.getId());
+                    } else {
+                        System.err.println("Failed to sync delete reminder offline: " + e.getMessage());
+                        throw e;
+                    }
+                }
+            } else {
+                reminderDao.deleteReminder(reminder.getId());
+            }
+        }
+
         // 1. Pull from Server (Direct array reading to optimize performance)
         ReminderDto[] serverReminders = apiClient.get("/api/reminders", ReminderDto[].class);
 
@@ -181,6 +268,10 @@ public class SyncService {
 
         if (serverReminders != null) {
             for (ReminderDto dto : serverReminders) {
+                if (dto.getId() != null && deletedServerIds.contains(dto.getId())) {
+                    continue; // Skip locally deleted reminders
+                }
+
                 Reminder localReminder = reminderDao.getReminderByServerId(dto.getId());
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 
@@ -244,6 +335,29 @@ public class SyncService {
     }
 
     private void syncPayments() throws Exception {
+        // 0. Process Deletions First
+        List<MonthlyPayment> deletedPayments = paymentDao.getDeletedPayments();
+        java.util.Set<Long> deletedServerIds = new java.util.HashSet<>();
+        for (MonthlyPayment payment : deletedPayments) {
+            if (payment.getServerId() != null) {
+                deletedServerIds.add(payment.getServerId());
+                try {
+                    apiClient.delete("/api/payments/" + payment.getServerId());
+                    payment.setSyncStatus("DELETE_SYNCED");
+                    paymentDao.deletePayment(payment.getId());
+                } catch (Exception e) {
+                    if (e.getMessage() != null && (e.getMessage().contains("404") || e.getMessage().toLowerCase().contains("not found"))) {
+                        paymentDao.deletePayment(payment.getId());
+                    } else {
+                        System.err.println("Failed to sync delete payment offline: " + e.getMessage());
+                        throw e;
+                    }
+                }
+            } else {
+                paymentDao.deletePayment(payment.getId());
+            }
+        }
+
         // 1. Pull from Server (Direct array reading to optimize performance)
         MonthlyPaymentDto[] serverPayments = apiClient.get("/api/payments", MonthlyPaymentDto[].class);
 
@@ -272,6 +386,10 @@ public class SyncService {
         if (serverPayments != null) {
             long startOfToday = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
             for (MonthlyPaymentDto dto : serverPayments) {
+                if (dto.getId() != null && deletedServerIds.contains(dto.getId())) {
+                    continue; // Skip locally deleted payments
+                }
+
                 MonthlyPayment localPayment = paymentDao.getPaymentByServerId(dto.getId());
                 long serverMillis = parseInstant(dto.getUpdatedAt());
 

@@ -84,6 +84,16 @@ public class QuickNoteDao {
         }
     }
 
+    public void softDeleteNote(int id) throws SQLException {
+        String sql = "UPDATE quick_notes SET sync_status = 'DELETE_PENDING', updated_at = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, System.currentTimeMillis());
+            pstmt.setInt(2, id);
+            pstmt.executeUpdate();
+        }
+    }
+
     public void clearAll() throws SQLException {
         String sql = "DELETE FROM quick_notes";
         try (Connection conn = DatabaseManager.getConnection();
@@ -122,7 +132,20 @@ public class QuickNoteDao {
 
     public List<QuickNote> getAllNotes() throws SQLException {
         List<QuickNote> notes = new ArrayList<>();
-        String sql = "SELECT * FROM quick_notes ORDER BY position ASC";
+        String sql = "SELECT * FROM quick_notes WHERE sync_status IS NULL OR (sync_status != 'DELETE_PENDING' AND sync_status != 'DELETE_SYNCED') ORDER BY position ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                notes.add(mapRow(rs));
+            }
+        }
+        return notes;
+    }
+
+    public List<QuickNote> getDeletedNotes() throws SQLException {
+        List<QuickNote> notes = new ArrayList<>();
+        String sql = "SELECT * FROM quick_notes WHERE sync_status = 'DELETE_PENDING'";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

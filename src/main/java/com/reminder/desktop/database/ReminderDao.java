@@ -86,6 +86,16 @@ public class ReminderDao {
         }
     }
 
+    public void softDeleteReminder(int id) throws SQLException {
+        String sql = "UPDATE reminders SET sync_status = 'DELETE_PENDING', updated_at = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, System.currentTimeMillis());
+            pstmt.setInt(2, id);
+            pstmt.executeUpdate();
+        }
+    }
+
     public void clearAll() throws SQLException {
         String sql = "DELETE FROM reminders";
         try (Connection conn = DatabaseManager.getConnection();
@@ -124,7 +134,7 @@ public class ReminderDao {
 
     public List<Reminder> getAllReminders() throws SQLException {
         List<Reminder> reminders = new ArrayList<>();
-        String sql = "SELECT * FROM reminders ORDER BY time ASC";
+        String sql = "SELECT * FROM reminders WHERE sync_status IS NULL OR (sync_status != 'DELETE_PENDING' AND sync_status != 'DELETE_SYNCED') ORDER BY time ASC";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -137,7 +147,7 @@ public class ReminderDao {
 
     public List<Reminder> getPendingReminders() throws SQLException {
         List<Reminder> reminders = new ArrayList<>();
-        String sql = "SELECT * FROM reminders WHERE is_expired = 0 ORDER BY time ASC";
+        String sql = "SELECT * FROM reminders WHERE is_expired = 0 AND (sync_status IS NULL OR (sync_status != 'DELETE_PENDING' AND sync_status != 'DELETE_SYNCED')) ORDER BY time ASC";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -150,7 +160,20 @@ public class ReminderDao {
 
     public List<Reminder> getExpiredReminders() throws SQLException {
         List<Reminder> reminders = new ArrayList<>();
-        String sql = "SELECT * FROM reminders WHERE is_expired = 1 ORDER BY time ASC";
+        String sql = "SELECT * FROM reminders WHERE is_expired = 1 AND (sync_status IS NULL OR (sync_status != 'DELETE_PENDING' AND sync_status != 'DELETE_SYNCED')) ORDER BY time ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                reminders.add(mapRow(rs));
+            }
+        }
+        return reminders;
+    }
+
+    public List<Reminder> getDeletedReminders() throws SQLException {
+        List<Reminder> reminders = new ArrayList<>();
+        String sql = "SELECT * FROM reminders WHERE sync_status = 'DELETE_PENDING'";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

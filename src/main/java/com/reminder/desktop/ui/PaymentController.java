@@ -28,12 +28,33 @@ public class PaymentController {
     }
 
     public void addPayment(String name, LocalDate date, PaymentView view) {
+        addPayment(name, date, null, "MONTHLY", view);
+    }
+
+    public void addPayment(String name, LocalDate date, String amountStr, String recurrenceStr, PaymentView view) {
         if (name == null || name.trim().isEmpty() || date == null) return;
 
         new Thread(() -> {
             try {
                 long epochMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-                repository.addPayment(name.trim(), epochMillis);
+                Double amount = null;
+                if (amountStr != null && !amountStr.trim().isEmpty()) {
+                    try {
+                        amount = Double.parseDouble(amountStr.trim());
+                    } catch (NumberFormatException ignored) {}
+                }
+                
+                com.reminder.desktop.models.RecurrenceType recurrence = com.reminder.desktop.models.RecurrenceType.MONTHLY;
+                if (recurrenceStr != null) {
+                    try {
+                        recurrence = com.reminder.desktop.models.RecurrenceType.valueOf(recurrenceStr.toUpperCase());
+                    } catch (IllegalArgumentException ignored) {}
+                }
+
+                // Internally default to "7,3,1,0" for offsets
+                String notificationOffsets = "7,3,1,0";
+
+                repository.addPayment(name.trim(), epochMillis, amount, recurrence, notificationOffsets);
                 Platform.runLater(() -> loadPayments(view));
             } catch (Exception e) {
                 System.err.println("Error adding payment: " + e.getMessage());

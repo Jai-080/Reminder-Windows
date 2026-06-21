@@ -49,13 +49,22 @@ public class PaymentView extends ScrollPane {
         nameInput.setPromptText("E.g., Netflix subscription, Rent...");
         HBox.setHgrow(nameInput, Priority.ALWAYS);
 
+        TextField amountInput = new TextField();
+        amountInput.setPromptText("Amount (Optional)");
+        amountInput.setPrefWidth(120);
+
+        ComboBox<String> recurrenceCombo = new ComboBox<>();
+        recurrenceCombo.getItems().addAll("Monthly", "Quarterly", "Yearly");
+        recurrenceCombo.setValue("Monthly");
+        recurrenceCombo.setPrefWidth(120);
+
         DatePicker dueDatePicker = new DatePicker(LocalDate.now());
-        dueDatePicker.setPrefWidth(150);
+        dueDatePicker.setPrefWidth(120);
 
         Button addBtn = new Button("Add Payment");
         addBtn.getStyleClass().add("button-accent");
 
-        inputsRow.getChildren().addAll(nameInput, new Label("Due Date:"), dueDatePicker, addBtn);
+        inputsRow.getChildren().addAll(nameInput, amountInput, recurrenceCombo, new Label("Due Date:"), dueDatePicker, addBtn);
         formCard.getChildren().addAll(formTitle, inputsRow);
 
         // List Header
@@ -70,8 +79,10 @@ public class PaymentView extends ScrollPane {
 
         // Event Trigger
         addBtn.setOnAction(e -> {
-            controller.addPayment(nameInput.getText(), dueDatePicker.getValue(), this);
+            controller.addPayment(nameInput.getText(), dueDatePicker.getValue(), amountInput.getText(), recurrenceCombo.getValue(), this);
             nameInput.clear();
+            amountInput.clear();
+            recurrenceCombo.setValue("Monthly");
         });
 
         // Initial Load
@@ -123,13 +134,25 @@ public class PaymentView extends ScrollPane {
             Label nameLbl = new Label(payment.getName());
             nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
             
+            String amountText = payment.getAmount() == null ? "Amount Unknown" : String.format("₹%.2f", payment.getAmount());
+            Label amountLbl = new Label(amountText);
+            amountLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: -color-text-secondary;");
+
+            String recurrenceText = payment.getRecurrence() != null ? payment.getRecurrence().name() : "MONTHLY";
+            Label recurrenceBadge = new Label(recurrenceText);
+            recurrenceBadge.setStyle("-fx-font-size: 10px; -fx-padding: 2 6; -fx-background-radius: 4px; -fx-background-color: -color-neutral-muted; -fx-text-fill: -color-text-muted;");
+
+            HBox amountAndRecurrence = new HBox(8, amountLbl, recurrenceBadge);
+            amountAndRecurrence.setAlignment(Pos.CENTER_LEFT);
+
             Label dateLbl = new Label("Due Date: " + dateFormat.format(new Date(payment.getDueDate())));
             dateLbl.getStyleClass().add("subtitle-label");
             
             if (payment.isCompleted()) {
                 nameLbl.setStyle(nameLbl.getStyle() + " -fx-strikethrough: true; -fx-text-fill: -color-text-secondary;");
+                amountLbl.setStyle(amountLbl.getStyle() + " -fx-strikethrough: true;");
             }
-            details.getChildren().addAll(nameLbl, dateLbl);
+            details.getChildren().addAll(nameLbl, amountAndRecurrence, dateLbl);
             HBox.setHgrow(details, Priority.ALWAYS);
 
             // Sync Badge

@@ -35,6 +35,7 @@ public class VerificationTest {
             } catch (IllegalStateException ignored) {}
 
             testSQLiteInitAndCRUD();
+            testMonthlyPaymentAutoRenew();
             testAuthenticationFlow();
             testApiCompatibilityAndSync();
             testSchedulerPersistenceAndNotifications();
@@ -102,6 +103,59 @@ public class VerificationTest {
             throw new Exception("Delete failed: Record still exists.");
         }
         System.out.println("Local Delete success.");
+    }
+
+    private static void testMonthlyPaymentAutoRenew() throws Exception {
+        System.out.println("\n--- Step 1.5: Testing Monthly Payment Auto-Renew logic ---");
+        MonthlyPaymentDao paymentDao = new MonthlyPaymentDao();
+        paymentDao.clearAll();
+
+        com.reminder.desktop.repository.MonthlyPaymentRepository repository = new com.reminder.desktop.repository.MonthlyPaymentRepository();
+        
+        // 1. Insert a payment with QUARTERLY recurrence
+        long initialDueDate = System.currentTimeMillis();
+        MonthlyPayment payment = repository.addPayment("Electricity Bill", initialDueDate, 120.0, com.reminder.desktop.models.RecurrenceType.QUARTERLY, "7,3,1,0");
+        
+        if (payment.getId() == null) {
+            throw new Exception("Failed to insert payment for auto-renew test.");
+        }
+        System.out.println("Inserted QUARTERLY payment: id=" + payment.getId() + ", name=" + payment.getName() + ", dueDate=" + payment.getDueDate());
+
+        // 2. Toggle it completed (trigger auto-renew)
+        repository.togglePaymentCompleted(payment);
+
+        // 3. Read it back from database
+        MonthlyPayment updatedPayment = paymentDao.getPaymentById(payment.getId());
+        if (updatedPayment == null) {
+            throw new Exception("Updated payment not found in SQLite.");
+        }
+
+        System.out.println("Auto-renewed payment details:");
+        System.out.println("  DueDate: " + updatedPayment.getDueDate());
+        System.out.println("  Completed: " + updatedPayment.isCompleted());
+        System.out.println("  SyncStatus: " + updatedPayment.getSyncStatus());
+        System.out.println("  Recurrence: " + updatedPayment.getRecurrence());
+
+        // 4. Verify advanced by 3 months
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(initialDueDate);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 9);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        cal.add(java.util.Calendar.MONTH, 3);
+        long expectedDueDate = cal.getTimeInMillis();
+
+        if (updatedPayment.getDueDate() != expectedDueDate) {
+            throw new Exception("Auto-renew date advancement failed. Expected " + expectedDueDate + ", but got " + updatedPayment.getDueDate());
+        }
+        if (updatedPayment.isCompleted()) {
+            throw new Exception("Auto-renew completed status reset failed. Expected false, but got true.");
+        }
+        if (!"PENDING".equals(updatedPayment.getSyncStatus())) {
+            throw new Exception("Auto-renew sync status failed. Expected PENDING, but got " + updatedPayment.getSyncStatus());
+        }
+        System.out.println("Auto-renew verification passed successfully!");
     }
 
     private static void testAuthenticationFlow() throws Exception {
@@ -216,12 +270,21 @@ public class VerificationTest {
         // 3. Payments API CRUD
         System.out.println("Creating test payment on server...");
         long paymentTime = System.currentTimeMillis() + 86400000;
-        MonthlyPaymentDto paymentDto = new MonthlyPaymentDto(null, "Gym Membership", paymentTime, false);
+        MonthlyPaymentDto paymentDto = new MonthlyPaymentDto(null, "Gym Membership", paymentTime, false, 499.50, "QUARTERLY", "7,3,1,0");
         MonthlyPaymentDto payResp = client.post("/api/payments", paymentDto, MonthlyPaymentDto.class);
         if (payResp.getId() == null) {
             throw new Exception("API Payment POST failed.");
         }
-        System.out.println("API POST Payment success. Server ID: " + payResp.getId());
+        if (payResp.getAmount() == null || Math.abs(payResp.getAmount() - 499.50) > 0.001) {
+            throw new Exception("API Payment amount check failed: " + payResp.getAmount());
+        }
+        if (!"QUARTERLY".equals(payResp.getRecurrence())) {
+            throw new Exception("API Payment recurrence check failed: " + payResp.getRecurrence());
+        }
+        if (!"7,3,1,0".equals(payResp.getNotificationOffsets())) {
+            throw new Exception("API Payment notificationOffsets check failed: " + payResp.getNotificationOffsets());
+        }
+        System.out.println("API POST Payment success. Server ID: " + payResp.getId() + ", amount: " + payResp.getAmount() + ", recurrence: " + payResp.getRecurrence() + ", offsets: " + payResp.getNotificationOffsets());
 
         client.delete("/api/payments/" + payResp.getId());
         System.out.println("API DELETE Payment success.");

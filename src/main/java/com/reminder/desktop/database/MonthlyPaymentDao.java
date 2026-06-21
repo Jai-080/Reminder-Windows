@@ -1,6 +1,7 @@
 package com.reminder.desktop.database;
 
 import com.reminder.desktop.models.MonthlyPayment;
+import com.reminder.desktop.models.RecurrenceType;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,8 +10,8 @@ import java.util.List;
 public class MonthlyPaymentDao {
 
     public void insertPayment(MonthlyPayment payment) throws SQLException {
-        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount, recurrence) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (payment.getServerId() != null) {
@@ -27,6 +28,11 @@ public class MonthlyPaymentDao {
                 pstmt.setDouble(7, payment.getAmount());
             } else {
                 pstmt.setNull(7, Types.DOUBLE);
+            }
+            if (payment.getRecurrence() != null) {
+                pstmt.setString(8, payment.getRecurrence().name());
+            } else {
+                pstmt.setString(8, "MONTHLY");
             }
             
             pstmt.executeUpdate();
@@ -64,7 +70,7 @@ public class MonthlyPaymentDao {
                     payment.getId(), payment.getServerId(), payment.getSyncStatus(), payment.getUpdatedAt());
 
             String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
-                    "completed = ?, updated_at = ?, sync_status = ?, amount = ? WHERE id = ?";
+                    "completed = ?, updated_at = ?, sync_status = ?, amount = ?, recurrence = ? WHERE id = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 if (payment.getServerId() != null) {
                     pstmt.setLong(1, payment.getServerId());
@@ -81,7 +87,12 @@ public class MonthlyPaymentDao {
                 } else {
                     pstmt.setNull(7, Types.DOUBLE);
                 }
-                pstmt.setInt(8, payment.getId());
+                if (payment.getRecurrence() != null) {
+                    pstmt.setString(8, payment.getRecurrence().name());
+                } else {
+                    pstmt.setString(8, "MONTHLY");
+                }
+                pstmt.setInt(9, payment.getId());
                 
                 pstmt.executeUpdate();
             }
@@ -187,6 +198,16 @@ public class MonthlyPaymentDao {
         Long serverId = rs.wasNull() ? null : serverIdVal;
         double amountVal = rs.getDouble("amount");
         Double amount = rs.wasNull() ? null : amountVal;
+        String recurrenceStr = rs.getString("recurrence");
+        if (rs.wasNull() || recurrenceStr == null) {
+            recurrenceStr = "MONTHLY";
+        }
+        RecurrenceType recurrence = RecurrenceType.MONTHLY;
+        try {
+            recurrence = RecurrenceType.valueOf(recurrenceStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // default
+        }
         
         return new MonthlyPayment(
                 rs.getInt("id"),
@@ -196,7 +217,8 @@ public class MonthlyPaymentDao {
                 rs.getInt("completed") == 1,
                 rs.getLong("updated_at"),
                 rs.getString("sync_status"),
-                amount
+                amount,
+                recurrence
         );
     }
 }

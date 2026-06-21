@@ -9,6 +9,7 @@ public class MonthlyPaymentDto {
     private Long dueDate;
     private Boolean completed;
     private Double amount;
+    private String recurrence;
     private String createdAt;
     private String updatedAt;
 
@@ -21,6 +22,7 @@ public class MonthlyPaymentDto {
         this.dueDate = dueDate;
         this.completed = completed;
         this.amount = null;
+        this.recurrence = "MONTHLY";
     }
 
     public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount) {
@@ -29,6 +31,16 @@ public class MonthlyPaymentDto {
         this.dueDate = dueDate;
         this.completed = completed;
         this.amount = amount;
+        this.recurrence = "MONTHLY";
+    }
+
+    public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount, String recurrence) {
+        this.id = id;
+        this.name = name;
+        this.dueDate = dueDate;
+        this.completed = completed;
+        this.amount = amount;
+        this.recurrence = recurrence;
     }
 
     public Long getId() {
@@ -85,5 +97,13 @@ public class MonthlyPaymentDto {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getRecurrence() {
+        return recurrence;
+    }
+
+    public void setRecurrence(String recurrence) {
+        this.recurrence = recurrence;
     }
 }

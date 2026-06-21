@@ -10,6 +10,7 @@ import com.reminder.desktop.dto.MonthlyPaymentDto;
 import com.reminder.desktop.models.QuickNote;
 import com.reminder.desktop.models.Reminder;
 import com.reminder.desktop.models.MonthlyPayment;
+import com.reminder.desktop.models.RecurrenceType;
 
 import java.time.Instant;
 import java.util.List;
@@ -439,6 +440,18 @@ public class SyncService {
                         localPayment.setName(dto.getName());
                         localPayment.setDueDate(dto.getDueDate());
                         localPayment.setCompleted(dto.getCompleted() != null && dto.getCompleted());
+                        localPayment.setAmount(dto.getAmount());
+                        
+                        String recStr = dto.getRecurrence();
+                        RecurrenceType rec = RecurrenceType.MONTHLY;
+                        if (recStr != null) {
+                            try {
+                                rec = RecurrenceType.valueOf(recStr.toUpperCase());
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+                        localPayment.setRecurrence(rec);
+                        localPayment.setNotificationOffsets(dto.getNotificationOffsets() != null ? dto.getNotificationOffsets() : "0");
+                        
                         localPayment.setUpdatedAt(serverMillis);
                         localPayment.setSyncStatus("SYNCED");
                         paymentDao.updatePayment(localPayment);
@@ -448,6 +461,15 @@ public class SyncService {
                         }
                     }
                 } else {
+                    String recStr = dto.getRecurrence();
+                    RecurrenceType rec = RecurrenceType.MONTHLY;
+                    if (recStr != null) {
+                        try {
+                            rec = RecurrenceType.valueOf(recStr.toUpperCase());
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+                    String offsets = dto.getNotificationOffsets() != null ? dto.getNotificationOffsets() : "0";
+
                     MonthlyPayment newPayment = new MonthlyPayment(
                             null,
                             dto.getId(),
@@ -455,7 +477,10 @@ public class SyncService {
                             dto.getDueDate() != null ? dto.getDueDate() : 0L,
                             dto.getCompleted() != null && dto.getCompleted(),
                             serverMillis,
-                            "SYNCED"
+                            "SYNCED",
+                            dto.getAmount(),
+                            rec,
+                            offsets
                     );
                     paymentDao.insertPayment(newPayment);
                     if (!newPayment.isCompleted() && newPayment.getDueDate() >= startOfToday) {
@@ -472,7 +497,10 @@ public class SyncService {
                     local.getServerId(),
                     local.getName(),
                     local.getDueDate(),
-                    local.isCompleted()
+                    local.isCompleted(),
+                    local.getAmount(),
+                    local.getRecurrence() != null ? local.getRecurrence().name() : "MONTHLY",
+                    local.getNotificationOffsets() != null ? local.getNotificationOffsets() : "0"
             );
             dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
             if (local.getServerId() == null) {

@@ -9,8 +9,8 @@ import java.util.List;
 public class MonthlyPaymentDao {
 
     public void insertPayment(MonthlyPayment payment) throws SQLException {
-        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (payment.getServerId() != null) {
@@ -23,6 +23,11 @@ public class MonthlyPaymentDao {
             pstmt.setInt(4, payment.isCompleted() ? 1 : 0);
             pstmt.setLong(5, payment.getUpdatedAt() != null ? payment.getUpdatedAt() : System.currentTimeMillis());
             pstmt.setString(6, payment.getSyncStatus());
+            if (payment.getAmount() != null) {
+                pstmt.setDouble(7, payment.getAmount());
+            } else {
+                pstmt.setNull(7, Types.DOUBLE);
+            }
             
             pstmt.executeUpdate();
             
@@ -35,8 +40,6 @@ public class MonthlyPaymentDao {
     }
 
     public void updatePayment(MonthlyPayment payment) throws SQLException {
-        String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
-                "completed = ?, updated_at = ?, sync_status = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection()) {
             if (payment.getServerId() == null) {
                 Long existingServerId = null;
@@ -60,6 +63,8 @@ public class MonthlyPaymentDao {
             System.out.printf("[PAYMENT UPDATE LOG] localId=%d, serverId=%s, syncStatus=%s, updatedAt=%s%n",
                     payment.getId(), payment.getServerId(), payment.getSyncStatus(), payment.getUpdatedAt());
 
+            String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
+                    "completed = ?, updated_at = ?, sync_status = ?, amount = ? WHERE id = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 if (payment.getServerId() != null) {
                     pstmt.setLong(1, payment.getServerId());
@@ -71,7 +76,12 @@ public class MonthlyPaymentDao {
                 pstmt.setInt(4, payment.isCompleted() ? 1 : 0);
                 pstmt.setLong(5, payment.getUpdatedAt() != null ? payment.getUpdatedAt() : System.currentTimeMillis());
                 pstmt.setString(6, payment.getSyncStatus());
-                pstmt.setInt(7, payment.getId());
+                if (payment.getAmount() != null) {
+                    pstmt.setDouble(7, payment.getAmount());
+                } else {
+                    pstmt.setNull(7, Types.DOUBLE);
+                }
+                pstmt.setInt(8, payment.getId());
                 
                 pstmt.executeUpdate();
             }
@@ -175,6 +185,8 @@ public class MonthlyPaymentDao {
     private MonthlyPayment mapRow(ResultSet rs) throws SQLException {
         long serverIdVal = rs.getLong("server_id");
         Long serverId = rs.wasNull() ? null : serverIdVal;
+        double amountVal = rs.getDouble("amount");
+        Double amount = rs.wasNull() ? null : amountVal;
         
         return new MonthlyPayment(
                 rs.getInt("id"),
@@ -183,7 +195,8 @@ public class MonthlyPaymentDao {
                 rs.getLong("due_date"),
                 rs.getInt("completed") == 1,
                 rs.getLong("updated_at"),
-                rs.getString("sync_status")
+                rs.getString("sync_status"),
+                amount
         );
     }
 }

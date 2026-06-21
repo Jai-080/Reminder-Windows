@@ -8,6 +8,7 @@ public class MonthlyPaymentDto {
     private String name;
     private Long dueDate;
     private Boolean completed;
+    private Double amount;
     private String createdAt;
     private String updatedAt;
 
@@ -19,6 +20,15 @@ public class MonthlyPaymentDto {
         this.name = name;
         this.dueDate = dueDate;
         this.completed = completed;
+        this.amount = null;
+    }
+
+    public MonthlyPaymentDto(Long id, String name, Long dueDate, Boolean completed, Double amount) {
+        this.id = id;
+        this.name = name;
+        this.dueDate = dueDate;
+        this.completed = completed;
+        this.amount = amount;
     }
 
     public Long getId() {
@@ -67,5 +77,13 @@ public class MonthlyPaymentDto {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
     }
 }

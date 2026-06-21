@@ -60,6 +60,11 @@ public class DatabaseManager {
             stmt.execute(createNotesTable);
             stmt.execute(createRemindersTable);
             stmt.execute(createPaymentsTable);
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN amount REAL");
+            } catch (SQLException e) {
+                // Column already exists
+            }
         } catch (SQLException e) {
             System.err.println("Error initializing database tables: " + e.getMessage());
         }

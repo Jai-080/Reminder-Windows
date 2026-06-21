@@ -8,6 +8,7 @@ public class MonthlyPayment {
     private boolean completed;
     private Long updatedAt;
     private String syncStatus;
+    private Double amount;
 
     public MonthlyPayment() {
     }
@@ -20,6 +21,18 @@ public class MonthlyPayment {
         this.completed = completed;
         this.updatedAt = updatedAt;
         this.syncStatus = syncStatus;
+        this.amount = null;
+    }
+
+    public MonthlyPayment(Integer id, Long serverId, String name, long dueDate, boolean completed, Long updatedAt, String syncStatus, Double amount) {
+        this.id = id;
+        this.serverId = serverId;
+        this.name = name;
+        this.dueDate = dueDate;
+        this.completed = completed;
+        this.updatedAt = updatedAt;
+        this.syncStatus = syncStatus;
+        this.amount = amount;
     }
 
     public Integer getId() {
@@ -88,6 +101,15 @@ public class MonthlyPayment {
                 ", completed=" + completed +
                 ", updatedAt=" + updatedAt +
                 ", syncStatus='" + syncStatus + '\'' +
+                ", amount=" + amount +
                 '}';
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
     }
 }

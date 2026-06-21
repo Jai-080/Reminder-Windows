@@ -34,6 +34,7 @@ public class SyncService {
         return t;
     });
     private ScheduledFuture<?> retryFuture;
+    private ScheduledFuture<?> periodicSyncFuture;
 
     public interface SyncListener {
         void onSyncStarted();
@@ -76,6 +77,31 @@ public class SyncService {
             triggerSyncAsync(null);
         }, retryDelayMs, TimeUnit.MILLISECONDS);
         retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
+    }
+
+    public void syncAll() {
+        triggerSyncAsync(null);
+    }
+
+    public synchronized void startPeriodicSync() {
+        if (periodicSyncFuture != null && !periodicSyncFuture.isDone()) {
+            return;
+        }
+        System.out.println("WebSocketSync: Starting 5-minute periodic sync background scheduler.");
+        periodicSyncFuture = scheduler.scheduleAtFixedRate(() -> {
+            if (TokenStorage.hasToken()) {
+                System.out.println("WebSocketSync: Periodic background sync triggered.");
+                syncAll();
+            }
+        }, 5, 5, TimeUnit.MINUTES);
+    }
+
+    public synchronized void stopPeriodicSync() {
+        if (periodicSyncFuture != null) {
+            System.out.println("WebSocketSync: Stopping periodic sync background scheduler.");
+            periodicSyncFuture.cancel(true);
+            periodicSyncFuture = null;
+        }
     }
 
     public void triggerSyncAsync(SyncListener listener) {

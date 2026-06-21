@@ -127,6 +127,8 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         TokenStorage.clearSession();
+        com.reminder.desktop.sync.WebSocketManager.getInstance().disconnect();
+        com.reminder.desktop.sync.SyncService.getInstance().stopPeriodicSync();
     }
 
     @Override

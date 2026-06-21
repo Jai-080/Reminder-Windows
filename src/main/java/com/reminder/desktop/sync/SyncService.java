@@ -18,6 +18,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SyncService {
     private static SyncService instance;
+    private static final List<Runnable> globalListeners = new CopyOnWriteArrayList<>();
+
+    public static void addSyncFinishedListener(Runnable listener) {
+        globalListeners.add(listener);
+    }
+
+    public static void removeSyncFinishedListener(Runnable listener) {
+        globalListeners.remove(listener);
+    }
+
     private final ApiClient apiClient;
     private final QuickNoteDao noteDao;
     private final ReminderDao reminderDao;
@@ -111,6 +121,7 @@ public class SyncService {
         }
         
         executor.submit(() -> {
+            System.out.println("syncAll started");
             if (!syncRunning.compareAndSet(false, true)) {
                 System.out.println("Sync already in progress, skipping trigger.");
                 if (listener != null) listener.onSyncFinished(false, "Sync already in progress.");
@@ -121,6 +132,10 @@ public class SyncService {
                 performSync();
                 TokenStorage.setLastSyncTimestamp(System.currentTimeMillis());
                 resetRetryDelay(); // Success: reset backoff
+                System.out.println("syncAll completed");
+                for (Runnable r : globalListeners) {
+                    javafx.application.Platform.runLater(r);
+                }
                 if (listener != null) listener.onSyncFinished(true, "Synchronized successfully.");
             } catch (Exception e) {
                 System.err.println("Synchronization failed: " + e.getMessage());

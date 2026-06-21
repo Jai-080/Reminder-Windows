@@ -106,6 +106,25 @@ public class DashboardView extends ScrollPane {
 
         // Populate details
         refreshData();
+
+        // Dynamic sync finished listener registration
+        Runnable syncListener = () -> {
+            System.out.println("DashboardView: Sync completed, refreshing dashboard.");
+            refreshData();
+        };
+
+        this.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (newScene != null) {
+                com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+                refreshData();
+            } else {
+                com.reminder.desktop.sync.SyncService.removeSyncFinishedListener(syncListener);
+            }
+        });
+
+        if (this.getScene() != null) {
+            com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+        }
     }
 
     private VBox createSectionCard(String title, String viewName) {

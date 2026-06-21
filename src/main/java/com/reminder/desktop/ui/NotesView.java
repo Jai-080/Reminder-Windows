@@ -62,6 +62,25 @@ public class NotesView extends ScrollPane {
 
         // Initial Load
         controller.loadNotes(this);
+
+        // Dynamic sync finished listener registration
+        Runnable syncListener = () -> {
+            System.out.println("NotesView: Sync completed, reloading notes.");
+            controller.loadNotes(this);
+        };
+
+        this.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (newScene != null) {
+                com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+                controller.loadNotes(this);
+            } else {
+                com.reminder.desktop.sync.SyncService.removeSyncFinishedListener(syncListener);
+            }
+        });
+
+        if (this.getScene() != null) {
+            com.reminder.desktop.sync.SyncService.addSyncFinishedListener(syncListener);
+        }
     }
 
     public void displayNotes(List<QuickNote> notes) {

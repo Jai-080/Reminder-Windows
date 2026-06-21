@@ -173,6 +173,7 @@ public class WebSocketManager {
             SyncService.getInstance().syncAll();
 
         } else if ("MESSAGE".equals(command)) {
+            System.out.println("MESSAGE received");
             System.out.println("WebSocketManager: STOMP Frame Incoming [MESSAGE]:\n" + frameText);
             int bodyStartIndex = -1;
             for (int i = 1; i < lines.length; i++) {

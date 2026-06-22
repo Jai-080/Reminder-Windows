@@ -160,14 +160,30 @@ public class DashboardView extends ScrollPane {
                         .limit(3)
                         .collect(Collectors.toList());
 
-                List<MonthlyPayment> pendingPayments = paymentRepo.getAllPayments().stream()
+                List<MonthlyPayment> allPaymentsList = paymentRepo.getAllPayments();
+                List<MonthlyPayment> pendingPayments = allPaymentsList.stream()
                         .filter(p -> !p.isCompleted())
                         .limit(3)
                         .collect(Collectors.toList());
 
+                long nowMs = System.currentTimeMillis();
+                
+                long upcomingCount = allPaymentsList.stream()
+                        .filter(p -> !p.isCompleted() && p.getDueDate() >= nowMs)
+                        .count();
+                
+                long overdueCount = allPaymentsList.stream()
+                        .filter(p -> !p.isCompleted() && p.getDueDate() < nowMs)
+                        .count();
+
+                double totalAmountDue = allPaymentsList.stream()
+                        .filter(p -> !p.isCompleted() && p.getAmount() != null)
+                        .mapToDouble(MonthlyPayment::getAmount)
+                        .sum();
+
                 long notesPending = noteRepo.getAllNotes().stream().filter(n -> "PENDING".equalsIgnoreCase(n.getSyncStatus())).count();
                 long remindersPending = reminderRepo.getAllReminders().stream().filter(r -> "PENDING".equalsIgnoreCase(r.getSyncStatus())).count();
-                long paymentsPending = paymentRepo.getAllPayments().stream().filter(p -> "PENDING".equalsIgnoreCase(p.getSyncStatus())).count();
+                long paymentsPending = allPaymentsList.stream().filter(p -> "PENDING".equalsIgnoreCase(p.getSyncStatus())).count();
                 long pendingCount = notesPending + remindersPending + paymentsPending;
 
                 long lastSync = TokenStorage.getLastSyncTimestamp();
@@ -199,12 +215,20 @@ public class DashboardView extends ScrollPane {
 
                     // Update Payments
                     paymentsContainer.getChildren().clear();
+
+                    // Add dynamic summary metrics
+                    Label metricsLbl = new Label(String.format("Metrics: %d Upcoming | %d Overdue | Total Due: ₹%.2f", 
+                            upcomingCount, overdueCount, totalAmountDue));
+                    metricsLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: -color-accent; -fx-padding: 0 0 8 0;");
+                    paymentsContainer.getChildren().add(metricsLbl);
+
                     if (pendingPayments.isEmpty()) {
                         paymentsContainer.getChildren().add(new Label("No upcoming payments."));
                     } else {
                         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd");
                         for (MonthlyPayment p : pendingPayments) {
-                            Label lbl = new Label("• " + p.getName() + " (Due: " + sdf.format(new Date(p.getDueDate())) + ")");
+                            String amtStr = p.getAmount() == null ? "Amount Unknown" : String.format("₹%.2f", p.getAmount());
+                            Label lbl = new Label("• " + p.getName() + " (" + amtStr + ") - Due: " + sdf.format(new Date(p.getDueDate())));
                             paymentsContainer.getChildren().add(lbl);
                         }
                     }

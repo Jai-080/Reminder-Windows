@@ -53,13 +53,31 @@ public class DatabaseManager {
                 "due_date BIGINT, " +
                 "completed INTEGER DEFAULT 0, " +
                 "updated_at BIGINT, " +
-                "sync_status TEXT" +
+                "sync_status TEXT, " +
+                "amount REAL, " +
+                "recurrence TEXT DEFAULT 'MONTHLY', " +
+                "notification_offsets TEXT DEFAULT '0'" +
                 ");";
 
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(createNotesTable);
             stmt.execute(createRemindersTable);
             stmt.execute(createPaymentsTable);
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN amount REAL");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN recurrence TEXT DEFAULT 'MONTHLY'");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN notification_offsets TEXT DEFAULT '0'");
+            } catch (SQLException e) {
+                // Column already exists
+            }
         } catch (SQLException e) {
             System.err.println("Error initializing database tables: " + e.getMessage());
         }

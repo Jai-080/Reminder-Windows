@@ -2,6 +2,7 @@ package com.reminder.desktop.repository;
 
 import com.reminder.desktop.database.MonthlyPaymentDao;
 import com.reminder.desktop.models.MonthlyPayment;
+import com.reminder.desktop.models.RecurrenceType;
 import com.reminder.desktop.notifications.ReminderScheduler;
 import com.reminder.desktop.sync.ApiClient;
 import com.reminder.desktop.sync.SyncService;
@@ -27,6 +28,10 @@ public class MonthlyPaymentRepository {
     }
 
     public MonthlyPayment addPayment(String name, long rawDueDate) throws Exception {
+        return addPayment(name, rawDueDate, null, RecurrenceType.MONTHLY, "7,3,1,0");
+    }
+
+    public MonthlyPayment addPayment(String name, long rawDueDate, Double amount, RecurrenceType recurrence, String notificationOffsets) throws Exception {
         // Normalize due date to 9:00 AM on that day
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(rawDueDate);
@@ -43,7 +48,10 @@ public class MonthlyPaymentRepository {
                 normalizedDueDate,
                 false,
                 System.currentTimeMillis(),
-                "PENDING"
+                "PENDING",
+                amount,
+                recurrence,
+                notificationOffsets
         );
 
         paymentDao.insertPayment(payment);
@@ -70,15 +78,37 @@ public class MonthlyPaymentRepository {
     }
 
     public void togglePaymentCompleted(MonthlyPayment payment) throws Exception {
-        payment.setCompleted(!payment.isCompleted());
-        payment.setSyncStatus("PENDING");
-        payment.setUpdatedAt(System.currentTimeMillis());
-        paymentDao.updatePayment(payment);
+        boolean previouslyCompleted = payment.isCompleted();
+        if (!previouslyCompleted) {
+            // Marking completed -> Auto-Renew!
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(payment.getDueDate());
+            if (payment.getRecurrence() == RecurrenceType.QUARTERLY) {
+                cal.add(Calendar.MONTH, 3);
+            } else if (payment.getRecurrence() == RecurrenceType.YEARLY) {
+                cal.add(Calendar.YEAR, 1);
+            } else {
+                cal.add(Calendar.MONTH, 1);
+            }
+            long newDueDate = cal.getTimeInMillis();
 
-        // If marked completed, we can cancel the active schedule, otherwise schedule it
-        if (payment.isCompleted()) {
+            payment.setDueDate(newDueDate);
+            payment.setCompleted(false);
+            payment.setSyncStatus("PENDING");
+            payment.setUpdatedAt(System.currentTimeMillis());
+            paymentDao.updatePayment(payment);
+
+            // Reschedule (cancel previous, schedule next)
             ReminderScheduler.getInstance().cancelPayment(payment);
+            ReminderScheduler.getInstance().schedulePayment(payment);
         } else {
+            // Unmarking completed
+            payment.setCompleted(false);
+            payment.setSyncStatus("PENDING");
+            payment.setUpdatedAt(System.currentTimeMillis());
+            paymentDao.updatePayment(payment);
+
+            ReminderScheduler.getInstance().cancelPayment(payment);
             ReminderScheduler.getInstance().schedulePayment(payment);
         }
 

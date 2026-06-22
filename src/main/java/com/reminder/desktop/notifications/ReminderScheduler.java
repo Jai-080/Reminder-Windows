@@ -76,7 +76,7 @@ public class ReminderScheduler {
                         // Avoid triggering popup notifications for historical uncompleted monthly payments
                         if (p.getDueDate() >= startOfToday) {
                             if (p.getDueDate() <= now) {
-                                triggerPayment(p);
+                                triggerPayment(p, 0);
                             } else {
                                 schedulePayment(p);
                             }
@@ -121,13 +121,46 @@ public class ReminderScheduler {
         String key = "payment_" + payment.getId();
         cancelTask(key);
 
-        long delay = payment.getDueDate() - System.currentTimeMillis();
+        if (payment.isCompleted()) return;
+
+        // Parse notification offsets CSV
+        String offsetsStr = payment.getNotificationOffsets();
+        if (offsetsStr == null || offsetsStr.trim().isEmpty()) {
+            offsetsStr = "0";
+        }
+
+        String[] parts = offsetsStr.split(",");
+        long now = System.currentTimeMillis();
+        long nextAlertTime = -1;
+        int nextOffsetDays = -1;
+
+        for (String part : parts) {
+            try {
+                int days = Integer.parseInt(part.trim());
+                long alertTime = payment.getDueDate() - ((long) days * 24 * 60 * 60 * 1000);
+                if (alertTime > now) {
+                    if (nextAlertTime == -1 || alertTime < nextAlertTime) {
+                        nextAlertTime = alertTime;
+                        nextOffsetDays = days;
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // If no future alert offset exists, we don't schedule anything.
+        if (nextAlertTime == -1) {
+            System.out.printf("[PAYMENT SCHEDULER] No future alerts to schedule for localId=%d%n", payment.getId());
+            return;
+        }
+
+        long delay = nextAlertTime - now;
         if (delay < 0) delay = 0;
 
-        ScheduledFuture<?> future = executor.schedule(() -> triggerPayment(payment), delay, TimeUnit.MILLISECONDS);
+        final int offsetDaysVal = nextOffsetDays;
+        ScheduledFuture<?> future = executor.schedule(() -> triggerPayment(payment, offsetDaysVal), delay, TimeUnit.MILLISECONDS);
         scheduledTasks.put(key, future);
-        System.out.printf("[PAYMENT SCHEDULER] Scheduling payment: localId=%d, serverId=%d, dueDate=%d, success=true%n",
-                payment.getId(), payment.getServerId() != null ? payment.getServerId() : -1, payment.getDueDate());
+        System.out.printf("[PAYMENT SCHEDULER] Scheduling payment: localId=%d, serverId=%d, dueDate=%d, offset=%d, success=true%n",
+                payment.getId(), payment.getServerId() != null ? payment.getServerId() : -1, payment.getDueDate(), offsetDaysVal);
     }
 
     public void cancelPayment(MonthlyPayment payment) {
@@ -179,11 +212,16 @@ public class ReminderScheduler {
         }
     }
 
-    private void triggerPayment(MonthlyPayment payment) {
-        System.out.println("Triggering monthly payment alert: " + payment.getName());
+    private void triggerPayment(MonthlyPayment payment, int offsetDays) {
+        System.out.printf("Triggering monthly payment alert: %s (due in %d days)%n", payment.getName(), offsetDays);
+
+        String title = offsetDays == 0 ? "Payment Due Today" : "Payment Due Soon";
+        String message = offsetDays == 0 ? 
+                "Payment is due today: " + payment.getName() : 
+                "Payment is due in " + offsetDays + " days: " + payment.getName();
 
         // Show Notification
-        NotificationManager.getInstance().showWarningNotification("Payment Due Today", "Payment is due: " + payment.getName());
+        NotificationManager.getInstance().showWarningNotification(title, message);
 
         // Notify listeners on JavaFX Thread
         Platform.runLater(() -> {
@@ -191,5 +229,8 @@ public class ReminderScheduler {
                 l.onPaymentDue(payment);
             }
         });
+
+        // Loop propagation: automatically schedule the next offset alarm
+        schedulePayment(payment);
     }
 }

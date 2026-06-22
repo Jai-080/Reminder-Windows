@@ -7,8 +7,26 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:sqlite:reminder.db?journal_mode=WAL&busy_timeout=5000";
+    private static final String DB_URL;
     private static boolean initialized = false;
+
+    static {
+        String dbPath = "reminder.db";
+        try {
+            String appData = System.getenv("LOCALAPPDATA");
+            if (appData == null || appData.trim().isEmpty()) {
+                appData = System.getProperty("user.home");
+            }
+            File dbDir = new File(appData, "Reminder");
+            if (!dbDir.exists()) {
+                dbDir.mkdirs();
+            }
+            dbPath = new File(dbDir, "reminder.db").getAbsolutePath();
+        } catch (Exception e) {
+            System.err.println("Could not resolve database path: " + e.getMessage());
+        }
+        DB_URL = "jdbc:sqlite:" + dbPath + "?journal_mode=WAL&busy_timeout=5000";
+    }
 
     public static synchronized Connection getConnection() throws SQLException {
         try {

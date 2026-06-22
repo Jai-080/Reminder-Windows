@@ -54,7 +54,7 @@ public class Sidebar extends VBox {
         // User info & theme toggle
         String usernameVal = TokenStorage.getUsername();
         Label userLabel = new Label("Hello, " + (usernameVal != null ? usernameVal : "User") + "!");
-        userLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 4 8;");
+        userLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 4 16;");
 
         Button themeBtn = new Button("Toggle Theme");
         themeBtn.getStyleClass().add("sidebar-button");

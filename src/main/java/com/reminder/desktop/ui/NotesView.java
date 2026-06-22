@@ -8,6 +8,11 @@ import javafx.scene.layout.*;
 
 import java.util.List;
 import java.util.Optional;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.application.Platform;
+import com.reminder.desktop.repository.QuickNoteRepository;
 
 public class NotesView extends ScrollPane {
     private final NotesController controller;
@@ -88,17 +93,96 @@ public class NotesView extends ScrollPane {
         listContainer.getChildren().clear();
 
         if (notes.isEmpty()) {
-            Label placeholder = new Label("No quick notes available. Write one above!");
-            placeholder.getStyleClass().add("subtitle-label");
-            listContainer.getChildren().add(placeholder);
+            VBox emptyBox = new VBox(8);
+            emptyBox.getStyleClass().add("empty-state-box");
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(24));
+            
+            Label iconLbl = new Label("🗒");
+            iconLbl.getStyleClass().add("empty-state-icon");
+            
+            Label titleLbl = new Label("No quick notes yet");
+            titleLbl.getStyleClass().add("empty-state-title");
+            
+            Label descLbl = new Label("Add items above to start your checklist.");
+            descLbl.getStyleClass().add("empty-state-desc");
+            
+            emptyBox.getChildren().addAll(iconLbl, titleLbl, descLbl);
+            listContainer.getChildren().add(emptyBox);
             return;
         }
+
+        QuickNoteRepository noteRepo = new QuickNoteRepository();
 
         for (QuickNote note : notes) {
             HBox noteCard = new HBox(16);
             noteCard.getStyleClass().add("card");
             noteCard.setAlignment(Pos.CENTER_LEFT);
             noteCard.setPadding(new Insets(12, 16, 12, 16));
+            noteCard.setCursor(javafx.scene.Cursor.OPEN_HAND);
+
+            // Drag and Drop Event Handlers
+            noteCard.setOnDragDetected(event -> {
+                Dragboard db = noteCard.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                content.putString(String.valueOf(notes.indexOf(note)));
+                db.setContent(content);
+                noteCard.setCursor(javafx.scene.Cursor.CLOSED_HAND);
+                event.consume();
+            });
+
+            noteCard.setOnDragDone(event -> {
+                noteCard.setCursor(javafx.scene.Cursor.OPEN_HAND);
+                event.consume();
+            });
+
+            noteCard.setOnDragOver(event -> {
+                if (event.getGestureSource() != noteCard && event.getDragboard().hasString()) {
+                    event.acceptTransferModes(TransferMode.MOVE);
+                }
+                event.consume();
+            });
+
+            noteCard.setOnDragDropped(event -> {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasString()) {
+                    try {
+                        int sourceIndex = Integer.parseInt(db.getString());
+                        int targetIndex = notes.indexOf(note);
+
+                        if (sourceIndex >= 0 && sourceIndex < notes.size() && targetIndex >= 0 && targetIndex < notes.size() && sourceIndex != targetIndex) {
+                            QuickNote sourceNote = notes.get(sourceIndex);
+                            notes.remove(sourceIndex);
+                            notes.add(targetIndex, sourceNote);
+
+                            // Reassign order
+                            for (int i = 0; i < notes.size(); i++) {
+                                notes.get(i).setPosition(i);
+                            }
+
+                            // Save positions asynchronously
+                            final List<QuickNote> notesToSave = List.copyOf(notes);
+                            new Thread(() -> {
+                                try {
+                                    for (QuickNote n : notesToSave) {
+                                        noteRepo.updateNotePosition(n, n.getPosition());
+                                    }
+                                    Platform.runLater(() -> displayNotes(notes));
+                                } catch (Exception ex) {
+                                    System.err.println("Error saving reordered notes: " + ex.getMessage());
+                                }
+                            }).start();
+
+                            success = true;
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Error reordering notes: " + ex.getMessage());
+                    }
+                }
+                event.setDropCompleted(success);
+                event.consume();
+            });
 
             // Complete Checkbox
             CheckBox completeBox = new CheckBox();
@@ -115,24 +199,14 @@ public class NotesView extends ScrollPane {
 
             // Sync Status Indicator
             Label syncLbl = new Label();
-            syncLbl.setStyle("-fx-font-size: 10px; -fx-padding: 2 6; -fx-background-radius: 4px;");
+            syncLbl.getStyleClass().add("badge-pill");
             if ("PENDING".equalsIgnoreCase(note.getSyncStatus())) {
                 syncLbl.setText("Pending");
-                syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: -color-accent-light; -fx-text-fill: -color-accent;");
+                syncLbl.getStyleClass().add("badge-pending");
             } else {
                 syncLbl.setText("Synced");
-                syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: #E2F6EA; -fx-text-fill: -color-success;");
+                syncLbl.getStyleClass().add("badge-synced");
             }
-
-            // Move Up Button
-            Button upBtn = new Button("▲");
-            upBtn.setStyle("-fx-padding: 4 6; -fx-font-size: 10px;");
-            upBtn.setOnAction(e -> controller.moveNoteUp(note, currentNotesList, this));
-
-            // Move Down Button
-            Button downBtn = new Button("▼");
-            downBtn.setStyle("-fx-padding: 4 6; -fx-font-size: 10px;");
-            downBtn.setOnAction(e -> controller.moveNoteDown(note, currentNotesList, this));
 
             // Edit Button
             Button editBtn = new Button("Edit");
@@ -145,7 +219,7 @@ public class NotesView extends ScrollPane {
             delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
             delBtn.setOnAction(e -> controller.deleteNote(note, this));
 
-            HBox controls = new HBox(8, syncLbl, upBtn, downBtn, editBtn, delBtn);
+            HBox controls = new HBox(8, syncLbl, editBtn, delBtn);
             controls.setAlignment(Pos.CENTER_RIGHT);
 
             noteCard.getChildren().addAll(completeBox, textLbl, controls);
@@ -156,8 +230,10 @@ public class NotesView extends ScrollPane {
     private void triggerEditDialog(QuickNote note) {
         TextInputDialog dialog = new TextInputDialog(note.getText());
         dialog.setTitle("Edit Note");
-        dialog.setHeaderText("Modify your quick note content:");
+        dialog.setHeaderText("Modify Note");
         dialog.setContentText("Note content:");
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        ThemeManager.registerRoot(dialog.getDialogPane());
 
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(newText -> controller.updateNoteText(note, newText, this));

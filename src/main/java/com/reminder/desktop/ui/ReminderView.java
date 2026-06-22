@@ -58,17 +58,15 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         HBox.setHgrow(textInput, Priority.ALWAYS);
 
         DatePicker datePicker = new DatePicker(LocalDate.now());
-        datePicker.setPrefWidth(140);
+        datePicker.setPrefWidth(150);
+        UIUtils.configureDatePicker(datePicker);
 
-        Spinner<Integer> hourSpinner = new Spinner<>(0, 23, 9);
-        hourSpinner.setPrefWidth(70);
-        Spinner<Integer> minSpinner = new Spinner<>(0, 59, 0);
-        minSpinner.setPrefWidth(70);
+        TimePicker timePicker = new TimePicker(9, 0);
 
         Button scheduleBtn = new Button("Schedule");
         scheduleBtn.getStyleClass().add("button-accent");
 
-        inputsRow.getChildren().addAll(textInput, datePicker, new Label("Time:"), hourSpinner, new Label(":"), minSpinner, scheduleBtn);
+        inputsRow.getChildren().addAll(textInput, datePicker, new Label("Time:"), timePicker, scheduleBtn);
         formCard.getChildren().addAll(formTitle, inputsRow);
 
         // Lists Grid Layout
@@ -103,7 +101,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Form Event
         scheduleBtn.setOnAction(e -> {
-            controller.addReminder(textInput.getText(), datePicker.getValue(), hourSpinner.getValue(), minSpinner.getValue(), this);
+            controller.addReminder(textInput.getText(), datePicker.getValue(), timePicker.getHour(), timePicker.getMinute(), this);
             textInput.clear();
         });
 
@@ -141,7 +139,22 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Pending List
         if (pending.isEmpty()) {
-            pendingContainer.getChildren().add(new Label("No active reminders scheduled."));
+            VBox emptyBox = new VBox(6);
+            emptyBox.getStyleClass().add("empty-state-box");
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(16));
+            
+            Label iconLbl = new Label("🔔");
+            iconLbl.getStyleClass().add("empty-state-icon");
+            
+            Label titleLbl = new Label("No active reminders");
+            titleLbl.getStyleClass().add("empty-state-title");
+            
+            Label descLbl = new Label("Schedule one using the form above.");
+            descLbl.getStyleClass().add("empty-state-desc");
+            
+            emptyBox.getChildren().addAll(iconLbl, titleLbl, descLbl);
+            pendingContainer.getChildren().add(emptyBox);
         } else {
             for (Reminder reminder : pending) {
                 pendingContainer.getChildren().add(createReminderCard(reminder, true));
@@ -150,7 +163,22 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Expired List
         if (expired.isEmpty()) {
-            expiredContainer.getChildren().add(new Label("No expired reminders in history."));
+            VBox emptyBox = new VBox(6);
+            emptyBox.getStyleClass().add("empty-state-box");
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(16));
+            
+            Label iconLbl = new Label("⌛");
+            iconLbl.getStyleClass().add("empty-state-icon");
+            
+            Label titleLbl = new Label("No expired history");
+            titleLbl.getStyleClass().add("empty-state-title");
+            
+            Label descLbl = new Label("Past reminders will show up here.");
+            descLbl.getStyleClass().add("empty-state-desc");
+            
+            emptyBox.getChildren().addAll(iconLbl, titleLbl, descLbl);
+            expiredContainer.getChildren().add(emptyBox);
         } else {
             for (Reminder reminder : expired) {
                 expiredContainer.getChildren().add(createReminderCard(reminder, false));
@@ -175,13 +203,13 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Sync Badge
         Label syncLbl = new Label();
-        syncLbl.setStyle("-fx-font-size: 10px; -fx-padding: 2 6; -fx-background-radius: 4px;");
+        syncLbl.getStyleClass().add("badge-pill");
         if ("PENDING".equalsIgnoreCase(reminder.getSyncStatus())) {
             syncLbl.setText("Pending");
-            syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: -color-accent-light; -fx-text-fill: -color-accent;");
+            syncLbl.getStyleClass().add("badge-pending");
         } else {
             syncLbl.setText("Synced");
-            syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: #E2F6EA; -fx-text-fill: -color-success;");
+            syncLbl.getStyleClass().add("badge-synced");
         }
 
         Region spacer = new Region();
@@ -237,7 +265,9 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
     private void triggerEditDialog(Reminder reminder) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Edit Reminder");
-        dialog.setHeaderText("Modify the text and trigger schedule:");
+        dialog.setHeaderText("Modify Reminder");
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        ThemeManager.registerRoot(dialog.getDialogPane());
 
         ButtonType saveBtnType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, ButtonType.CANCEL);
@@ -251,10 +281,11 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 
         DatePicker datePicker = new DatePicker(ldt.toLocalDate());
-        Spinner<Integer> hourSpinner = new Spinner<>(0, 23, ldt.getHour());
-        Spinner<Integer> minSpinner = new Spinner<>(0, 59, ldt.getMinute());
+        UIUtils.configureDatePicker(datePicker);
 
-        HBox timeRow = new HBox(6, new Label("Time:"), hourSpinner, new Label(":"), minSpinner);
+        TimePicker timePicker = new TimePicker(ldt.getHour(), ldt.getMinute());
+
+        HBox timeRow = new HBox(6, new Label("Time:"), timePicker);
         timeRow.setAlignment(Pos.CENTER_LEFT);
 
         grid.getChildren().addAll(new Label("Message:"), textInput, new Label("Date:"), datePicker, timeRow);
@@ -262,7 +293,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == saveBtnType) {
-            controller.updateReminder(reminder, textInput.getText(), datePicker.getValue(), hourSpinner.getValue(), minSpinner.getValue(), this);
+            controller.updateReminder(reminder, textInput.getText(), datePicker.getValue(), timePicker.getHour(), timePicker.getMinute(), this);
         }
     }
 

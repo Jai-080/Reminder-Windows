@@ -18,7 +18,7 @@ public class PaymentView extends ScrollPane {
 
     public PaymentView() {
         this.controller = new PaymentController();
-        this.dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        this.dateFormat = new SimpleDateFormat("dd MMM yyyy", java.util.Locale.ENGLISH);
 
         this.setFitToWidth(true);
         this.setPannable(true);
@@ -46,12 +46,19 @@ public class PaymentView extends ScrollPane {
         inputsRow.setAlignment(Pos.CENTER_LEFT);
 
         TextField nameInput = new TextField();
-        nameInput.setPromptText("E.g., Netflix subscription, Rent...");
+        nameInput.setPromptText("Eg: Rent...");
         HBox.setHgrow(nameInput, Priority.ALWAYS);
 
         TextField amountInput = new TextField();
-        amountInput.setPromptText("Amount (Optional)");
+        amountInput.setPromptText("Amount");
         amountInput.setPrefWidth(120);
+        amountInput.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.isEmpty() || newText.matches("\\d*\\.?\\d*")) {
+                return change;
+            }
+            return null;
+        }));
 
         ComboBox<String> recurrenceCombo = new ComboBox<>();
         recurrenceCombo.getItems().addAll("Monthly", "Quarterly", "Yearly");
@@ -59,12 +66,13 @@ public class PaymentView extends ScrollPane {
         recurrenceCombo.setPrefWidth(120);
 
         DatePicker dueDatePicker = new DatePicker(LocalDate.now());
-        dueDatePicker.setPrefWidth(120);
+        dueDatePicker.setPrefWidth(150);
+        UIUtils.configureDatePicker(dueDatePicker);
 
-        Button addBtn = new Button("Add Payment");
+        Button addBtn = new Button("Add");
         addBtn.getStyleClass().add("button-accent");
 
-        inputsRow.getChildren().addAll(nameInput, amountInput, recurrenceCombo, new Label("Due Date:"), dueDatePicker, addBtn);
+        inputsRow.getChildren().addAll(nameInput, amountInput, recurrenceCombo, new Label("Due:"), dueDatePicker, addBtn);
         formCard.getChildren().addAll(formTitle, inputsRow);
 
         // List Header
@@ -112,9 +120,22 @@ public class PaymentView extends ScrollPane {
         listContainer.getChildren().clear();
 
         if (payments.isEmpty()) {
-            Label placeholder = new Label("No monthly payments added. Set one up above!");
-            placeholder.getStyleClass().add("subtitle-label");
-            listContainer.getChildren().add(placeholder);
+            VBox emptyBox = new VBox(8);
+            emptyBox.getStyleClass().add("empty-state-box");
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(24));
+            
+            Label iconLbl = new Label("💳");
+            iconLbl.getStyleClass().add("empty-state-icon");
+            
+            Label titleLbl = new Label("No monthly payments yet");
+            titleLbl.getStyleClass().add("empty-state-title");
+            
+            Label descLbl = new Label("Set up expenses and due dates above.");
+            descLbl.getStyleClass().add("empty-state-desc");
+            
+            emptyBox.getChildren().addAll(iconLbl, titleLbl, descLbl);
+            listContainer.getChildren().add(emptyBox);
             return;
         }
 
@@ -140,7 +161,7 @@ public class PaymentView extends ScrollPane {
 
             String recurrenceText = payment.getRecurrence() != null ? payment.getRecurrence().name() : "MONTHLY";
             Label recurrenceBadge = new Label(recurrenceText);
-            recurrenceBadge.setStyle("-fx-font-size: 10px; -fx-padding: 2 6; -fx-background-radius: 4px; -fx-background-color: -color-neutral-muted; -fx-text-fill: -color-text-muted;");
+            recurrenceBadge.getStyleClass().addAll("badge-pill", "badge-neutral");
 
             HBox amountAndRecurrence = new HBox(8, amountLbl, recurrenceBadge);
             amountAndRecurrence.setAlignment(Pos.CENTER_LEFT);
@@ -157,13 +178,13 @@ public class PaymentView extends ScrollPane {
 
             // Sync Badge
             Label syncLbl = new Label();
-            syncLbl.setStyle("-fx-font-size: 10px; -fx-padding: 2 6; -fx-background-radius: 4px;");
+            syncLbl.getStyleClass().add("badge-pill");
             if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
                 syncLbl.setText("Pending");
-                syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: -color-accent-light; -fx-text-fill: -color-accent;");
+                syncLbl.getStyleClass().add("badge-pending");
             } else {
                 syncLbl.setText("Synced");
-                syncLbl.setStyle(syncLbl.getStyle() + " -fx-background-color: #E2F6EA; -fx-text-fill: -color-success;");
+                syncLbl.getStyleClass().add("badge-synced");
             }
 
             // Controls VBox

@@ -168,17 +168,20 @@ public class DashboardView extends ScrollPane {
         agendaSection.getStyleClass().add("card");
         
         Label agendaTitle = new Label("Upcoming Agenda");
-        agendaTitle.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;");
+        agendaTitle.getStyleClass().add("section-header");
+        agendaTitle.setStyle("-fx-font-size: 15px;");
 
         VBox remindersSubBox = new VBox(8);
         Label remTitle = new Label("Reminders");
-        remTitle.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: -color-text-secondary;");
+        remTitle.getStyleClass().add("section-header");
+        remTitle.setStyle("-fx-font-size: 12px;");
         remindersContainer = new VBox(6);
         remindersSubBox.getChildren().addAll(remTitle, remindersContainer);
 
         VBox paymentsSubBox = new VBox(8);
         Label payTitle = new Label("Payments");
-        payTitle.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: -color-text-secondary;");
+        payTitle.getStyleClass().add("section-header");
+        payTitle.setStyle("-fx-font-size: 12px;");
         paymentsContainer = new VBox(6);
         paymentsSubBox.getChildren().addAll(payTitle, paymentsContainer);
 
@@ -227,7 +230,8 @@ public class DashboardView extends ScrollPane {
         card.setOnMouseClicked(e -> parentLayout.showView(viewName));
 
         Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: -color-text-secondary;");
+        titleLbl.getStyleClass().add("section-header");
+        titleLbl.setStyle("-fx-font-size: 11px;");
         card.getChildren().add(titleLbl);
         return card;
     }
@@ -236,7 +240,8 @@ public class DashboardView extends ScrollPane {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;");
+        titleLbl.getStyleClass().add("section-header");
+        titleLbl.setStyle("-fx-font-size: 15px;");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         

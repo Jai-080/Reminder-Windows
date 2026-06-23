@@ -40,7 +40,8 @@ public class PaymentView extends ScrollPane {
         formCard.setPadding(new Insets(16));
 
         Label formTitle = new Label("Add Monthly Payment");
-        formTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        formTitle.getStyleClass().add("section-header");
+        formTitle.setStyle("-fx-font-size: 14px;");
 
         HBox inputsRow = new HBox(12);
         inputsRow.setAlignment(Pos.CENTER_LEFT);
@@ -77,7 +78,8 @@ public class PaymentView extends ScrollPane {
 
         // List Header
         Label listTitle = new Label("Payments List");
-        listTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        listTitle.getStyleClass().add("section-header");
+        listTitle.setStyle("-fx-font-size: 16px;");
 
         listContainer = new VBox(12);
         listContainer.setAlignment(Pos.TOP_LEFT);

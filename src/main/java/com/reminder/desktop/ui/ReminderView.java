@@ -48,7 +48,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         formCard.setPadding(new Insets(16));
 
         Label formTitle = new Label("Schedule New Reminder");
-        formTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        formTitle.getStyleClass().add("section-header");
+        formTitle.setStyle("-fx-font-size: 14px;");
 
         HBox inputsRow = new HBox(12);
         inputsRow.setAlignment(Pos.CENTER_LEFT);
@@ -84,7 +85,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         // Pending Section
         VBox pendingBox = new VBox(12);
         Label pendingTitle = new Label("Active Reminders");
-        pendingTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        pendingTitle.getStyleClass().add("section-header");
+        pendingTitle.setStyle("-fx-font-size: 16px;");
         pendingContainer = new VBox(10);
         pendingBox.getChildren().addAll(pendingTitle, pendingContainer);
         grid.add(pendingBox, 0, 0);
@@ -92,7 +94,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         // Expired Section
         VBox expiredBox = new VBox(12);
         Label expiredTitle = new Label("Fired & Expired");
-        expiredTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        expiredTitle.getStyleClass().add("section-header");
+        expiredTitle.setStyle("-fx-font-size: 16px;");
         expiredContainer = new VBox(10);
         expiredBox.getChildren().addAll(expiredTitle, expiredContainer);
         grid.add(expiredBox, 1, 0);

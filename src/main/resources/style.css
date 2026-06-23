@@ -2,20 +2,24 @@
 
 .root {
     /* Color Palette - Default Light Mode */
-    -color-bg: #F8F9FA;
+    -color-bg: #FAFAFC;
     -color-surface: #FFFFFF;
-    -color-sidebar-bg: #F1F3F5;
-    -color-text: #212529;
-    -color-text-secondary: #495057;
-    -color-accent: #6C5CE7;
-    -color-accent-hover: #5B4BC4;
-    -color-accent-light: #EEECFC;
-    -color-border: #DEE2E6;
+    -color-sidebar-bg: #F4F1FF;
+    -color-text: #1D1B20;
+    -color-text-secondary: #49454F;
+    -color-accent: #7B6FEA;
+    -color-accent-hover: #6558E2;
+    -color-accent-light: #F4F1FF;
+    -color-border: #E8E6F5;
     -color-card-bg: #FFFFFF;
-    -color-danger: #FA5252;
-    -color-danger-hover: #FFE3E3;
+    -color-input-bg: #FFFFFF;
+    -color-danger: #C4684D;
+    -color-danger-hover: #FCEBE8;
     -color-success: #12B886;
     -color-success-hover: #E6FCF5;
+    -color-header-purple: #7C73E6;
+    -color-hint: #9A97A8;
+    -color-expired: #C65A28;
     
     -fx-font-family: "Segoe UI", "Inter", -fx-system;
     -fx-font-size: 13px;
@@ -24,20 +28,24 @@
 
 /* Dark Mode Variable Overrides */
 .root.dark {
-    -color-bg: #121214;
-    -color-surface: #1E1E24;
-    -color-sidebar-bg: #151518;
-    -color-text: #F8F9FA;
-    -color-text-secondary: #ADB5BD;
-    -color-accent: #8F7DF2;
-    -color-accent-hover: #A596F6;
-    -color-accent-light: #2D2755;
-    -color-border: #2D3035;
-    -color-card-bg: #1E1E24;
-    -color-danger: #FF6B6B;
-    -color-danger-hover: #4C2626;
+    -color-bg: #111113;
+    -color-surface: #1B1B21;
+    -color-sidebar-bg: #2A2831;
+    -color-text: #FFFFFF;
+    -color-text-secondary: #C6C2D3;
+    -color-accent: #8B7DFF;
+    -color-accent-hover: #A396FF;
+    -color-accent-light: #252233;
+    -color-border: #343240;
+    -color-card-bg: #1B1B21;
+    -color-input-bg: #1F1F1F;
+    -color-danger: #C4684D;
+    -color-danger-hover: #40221A;
     -color-success: #20C997;
     -color-success-hover: #1A3E34;
+    -color-header-purple: #9D8EFF;
+    -color-hint: #75717F;
+    -color-expired: #C65A28;
 }
 
 /* Typography & Labels */
@@ -56,19 +64,19 @@
 
 /* Text Fields & Password Fields */
 .text-field, .password-field {
-    -fx-background-color: -color-surface;
+    -fx-background-color: -color-input-bg;
     -fx-background-radius: 6px;
     -fx-border-color: -color-border;
     -fx-border-radius: 6px;
     -fx-border-width: 1px;
     -fx-text-fill: -color-text;
-    -fx-prompt-text-fill: -color-text-secondary;
+    -fx-prompt-text-fill: -color-hint;
     -fx-padding: 8px 12px;
     -fx-transition: border-color 0.2s ease-in-out;
 }
 .text-field:focused, .password-field:focused {
     -fx-border-color: -color-accent;
-    -fx-background-color: -color-surface;
+    -fx-background-color: -color-input-bg;
 }
 
 /* Buttons */
@@ -137,6 +145,15 @@
 .button-accent:pressed {
     -fx-background-color: -color-accent;
 }
+.root.dark .button-accent {
+    -fx-background-color: linear-gradient(to right, #7E72F5, #9B86FF);
+}
+.root.dark .button-accent:hover {
+    -fx-background-color: linear-gradient(to right, #9B86FF, #7E72F5);
+}
+.root.dark .button-accent:pressed {
+    -fx-background-color: linear-gradient(to right, #7E72F5, #9B86FF);
+}
 
 /* Danger Buttons */
 .button-danger {
@@ -152,6 +169,12 @@
     -fx-background-color: -color-danger-hover;
 }
 
+/* Section Header */
+.section-header {
+    -fx-text-fill: -color-header-purple;
+    -fx-font-weight: bold;
+}
+
 /* Cards */
 .card {
     -fx-background-color: -color-card-bg;
@@ -164,7 +187,7 @@
 }
 .card:hover {
     -fx-border-color: -color-accent;
-    -fx-effect: dropshadow(three-pass-box, rgba(108, 92, 231, 0.1), 12, 0, 0, 6);
+    -fx-effect: dropshadow(three-pass-box, rgba(123, 111, 234, 0.1), 12, 0, 0, 6);
 }
 .root.dark .card {
     -fx-effect: none;

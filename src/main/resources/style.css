@@ -582,15 +582,11 @@
     -fx-opacity: 0.4;
 }
 
-/* Toggle Switch (iOS/Android Slider style using CheckBox) */
-.check-box.toggle-switch {
-    -fx-padding: 0;
-    -fx-cursor: hand;
-}
-.check-box.toggle-switch > .box {
+/* Custom Toggle Switch styling */
+.toggle-switch-track {
     -fx-background-color: #E2E8F0;
-    -fx-background-radius: 12px;
-    -fx-padding: 0;
+    -fx-background-radius: 11;
+    -fx-border-radius: 11;
     -fx-pref-width: 42px;
     -fx-pref-height: 22px;
     -fx-min-width: 42px;
@@ -598,26 +594,24 @@
     -fx-max-width: 42px;
     -fx-max-height: 22px;
     -fx-alignment: center-left;
+    -fx-padding: 2px;
+    -fx-cursor: hand;
 }
-.root.dark .check-box.toggle-switch > .box {
+.root.dark .toggle-switch-track {
     -fx-background-color: #2D3035;
 }
-.check-box.toggle-switch > .box > .mark {
-    -fx-background-color: #FFFFFF;
-    -fx-shape: "M 10 10 m -10 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0";
-    -fx-pref-width: 16px;
-    -fx-pref-height: 16px;
-    -fx-min-width: 16px;
-    -fx-min-height: 16px;
-    -fx-max-width: 16px;
-    -fx-max-height: 16px;
-    -fx-translate-x: 3px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 2, 0, 0, 1);
-}
-.check-box.toggle-switch:selected > .box {
+.toggle-switch-track.active {
     -fx-background-color: -color-accent;
 }
-.check-box.toggle-switch:selected > .box > .mark {
-    -fx-translate-x: 23px; /* shift to right */
+.toggle-switch-thumb {
     -fx-background-color: #FFFFFF;
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 2, 0, 0, 1);
 }

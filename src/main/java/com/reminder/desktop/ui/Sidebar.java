@@ -58,17 +58,48 @@ public class Sidebar extends VBox {
         Label userLabel = new Label("Hello, " + (usernameVal != null ? usernameVal : "User") + "!");
         userLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 4 16;");
 
-        Label modeLabel = new Label("Dark Mode");
+        Label modeLabel = new Label("Toggle Theme");
         modeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: -color-text;");
         javafx.scene.layout.Region space = new javafx.scene.layout.Region();
         HBox.setHgrow(space, Priority.ALWAYS);
 
-        CheckBox themeToggle = new CheckBox();
-        themeToggle.getStyleClass().add("toggle-switch");
-        themeToggle.setSelected(ThemeManager.isDarkMode());
-        themeToggle.setOnAction(e -> ThemeManager.setDarkMode(themeToggle.isSelected()));
+        // Custom sliding toggle switch (Track & Thumb)
+        HBox switchTrack = new HBox();
+        switchTrack.getStyleClass().add("toggle-switch-track");
 
-        HBox themeBox = new HBox(10, modeLabel, space, themeToggle);
+        javafx.scene.layout.StackPane switchThumb = new javafx.scene.layout.StackPane();
+        switchThumb.getStyleClass().add("toggle-switch-thumb");
+
+        switchTrack.getChildren().add(switchThumb);
+
+        boolean isDark = ThemeManager.isDarkMode();
+        if (isDark) {
+            switchTrack.getStyleClass().add("active");
+            switchThumb.setTranslateX(20);
+        } else {
+            switchThumb.setTranslateX(0);
+        }
+
+        switchTrack.setOnMouseClicked(e -> {
+            boolean currentDark = ThemeManager.isDarkMode();
+            boolean newDark = !currentDark;
+            ThemeManager.setDarkMode(newDark);
+
+            // Animate sliding transition
+            javafx.animation.TranslateTransition tt = new javafx.animation.TranslateTransition(javafx.util.Duration.millis(120), switchThumb);
+            tt.setToX(newDark ? 20 : 0);
+            tt.play();
+
+            if (newDark) {
+                if (!switchTrack.getStyleClass().contains("active")) {
+                    switchTrack.getStyleClass().add("active");
+                }
+            } else {
+                switchTrack.getStyleClass().remove("active");
+            }
+        });
+
+        HBox themeBox = new HBox(10, modeLabel, space, switchTrack);
         themeBox.setAlignment(Pos.CENTER_LEFT);
         themeBox.setPadding(new Insets(6, 16, 6, 16));
 

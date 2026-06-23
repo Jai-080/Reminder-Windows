@@ -127,7 +127,7 @@ public class PaymentView extends ScrollPane {
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(24));
             
-            Label iconLbl = new Label("💳");
+            Label iconLbl = new Label("");
             iconLbl.getStyleClass().add("empty-state-icon");
             
             Label titleLbl = new Label("No monthly payments yet");

@@ -148,7 +148,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(16));
             
-            Label iconLbl = new Label("🔔");
+            Label iconLbl = new Label("");
             iconLbl.getStyleClass().add("empty-state-icon");
             
             Label titleLbl = new Label("No active reminders");
@@ -172,7 +172,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(16));
             
-            Label iconLbl = new Label("⌛");
+            Label iconLbl = new Label("");
             iconLbl.getStyleClass().add("empty-state-icon");
             
             Label titleLbl = new Label("No expired history");

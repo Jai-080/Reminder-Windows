@@ -113,7 +113,7 @@ public class DashboardView extends ScrollPane {
         HBox.setHgrow(summaryRow, Priority.ALWAYS);
 
         // Card 1: Notes
-        VBox notesCard = createMetricCard("🗒 QUICK NOTES", "Notes");
+        VBox notesCard = createMetricCard("QUICK NOTES", "Notes");
         notesMainMetric = new Label("0");
         notesMainMetric.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
         notesSubMetric = new Label("0 incomplete");
@@ -121,7 +121,7 @@ public class DashboardView extends ScrollPane {
         notesCard.getChildren().addAll(notesMainMetric, notesSubMetric);
 
         // Card 2: Reminders
-        VBox remindersCard = createMetricCard("🔔 REMINDERS", "Reminders");
+        VBox remindersCard = createMetricCard("REMINDERS", "Reminders");
         remindersMainMetric = new Label("0");
         remindersMainMetric.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
         remindersSubMetric = new Label("0 due today");
@@ -129,7 +129,7 @@ public class DashboardView extends ScrollPane {
         remindersCard.getChildren().addAll(remindersMainMetric, remindersSubMetric);
 
         // Card 3: Payments
-        VBox paymentsCard = createMetricCard("💳 MONTHLY PAYMENTS", "Payments");
+        VBox paymentsCard = createMetricCard("MONTHLY PAYMENTS", "Payments");
         paymentsMainMetric = new Label("0");
         paymentsMainMetric.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
         paymentsSubMetric = new Label("0 overdue");
@@ -365,7 +365,7 @@ public class DashboardView extends ScrollPane {
                         VBox emptyBox = new VBox(6);
                         emptyBox.setAlignment(Pos.CENTER);
                         emptyBox.setPadding(new Insets(12));
-                        Label icon = new Label("🗒");
+                        Label icon = new Label("");
                         icon.setStyle("-fx-font-size: 20px; -fx-opacity: 0.5;");
                         Label emptyLbl = new Label("Checklist empty");
                         emptyLbl.getStyleClass().add("subtitle-label");

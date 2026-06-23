@@ -176,24 +176,20 @@ public class PaymentView extends ScrollPane {
             details.getChildren().addAll(nameLbl, amountAndRecurrence, dateLbl);
             HBox.setHgrow(details, Priority.ALWAYS);
 
-            // Sync Badge
-            Label syncLbl = new Label();
-            syncLbl.getStyleClass().add("badge-pill");
-            if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
-                syncLbl.setText("Pending");
-                syncLbl.getStyleClass().add("badge-pending");
-            } else {
-                syncLbl.setText("Synced");
-                syncLbl.getStyleClass().add("badge-synced");
-            }
-
             // Controls VBox
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
             delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
             delBtn.setOnAction(e -> controller.deletePayment(payment, this));
 
-            HBox controls = new HBox(12, syncLbl, delBtn);
+            HBox controls;
+            if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
+                Label syncLbl = new Label("Pending");
+                syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
+                controls = new HBox(12, syncLbl, delBtn);
+            } else {
+                controls = new HBox(12, delBtn);
+            }
             controls.setAlignment(Pos.CENTER_RIGHT);
 
             paymentCard.getChildren().addAll(completeBox, details, controls);

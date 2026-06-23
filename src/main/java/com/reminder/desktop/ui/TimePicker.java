@@ -33,7 +33,27 @@ public class TimePicker extends HBox {
         SpinnerValueFactory<Integer> minFactory = 
             new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, initialMin);
         minFactory.setWrapAround(true);
-        minSpinner = new Spinner<>(minFactory);
+        minSpinner = new Spinner<Integer>(minFactory) {
+            @Override
+            public void increment(int steps) {
+                int oldVal = getValue();
+                super.increment(steps);
+                int newVal = getValue();
+                if (oldVal == 59 && newVal == 0) {
+                    hourSpinner.increment(1);
+                }
+            }
+
+            @Override
+            public void decrement(int steps) {
+                int oldVal = getValue();
+                super.decrement(steps);
+                int newVal = getValue();
+                if (oldVal == 0 && newVal == 59) {
+                    hourSpinner.decrement(1);
+                }
+            }
+        };
         minSpinner.setPrefWidth(64);
         minSpinner.setEditable(true);
 
@@ -48,6 +68,21 @@ public class TimePicker extends HBox {
         // Restrict text input to max 2 digits
         setupValidation(hourSpinner.getEditor(), 23);
         setupValidation(minSpinner.getEditor(), 59);
+
+        // Auto advance hour to minute after two digits entered
+        hourSpinner.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (hourSpinner.getEditor().isFocused() && newText.length() == 2) {
+                commitSpinnerValue(hourSpinner);
+                minSpinner.getEditor().requestFocus();
+            }
+        });
+
+        // Auto commit minute after two digits entered
+        minSpinner.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (minSpinner.getEditor().isFocused() && newText.length() == 2) {
+                commitSpinnerValue(minSpinner);
+            }
+        });
 
         this.getChildren().addAll(hourSpinner, colon, minSpinner);
     }

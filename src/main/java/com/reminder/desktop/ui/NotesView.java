@@ -197,17 +197,6 @@ public class NotesView extends ScrollPane {
                 textLbl.setStyle("-fx-text-fill: -color-text-secondary; -fx-strikethrough: true;");
             }
 
-            // Sync Status Indicator
-            Label syncLbl = new Label();
-            syncLbl.getStyleClass().add("badge-pill");
-            if ("PENDING".equalsIgnoreCase(note.getSyncStatus())) {
-                syncLbl.setText("Pending");
-                syncLbl.getStyleClass().add("badge-pending");
-            } else {
-                syncLbl.setText("Synced");
-                syncLbl.getStyleClass().add("badge-synced");
-            }
-
             // Edit Button
             Button editBtn = new Button("Edit");
             editBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
@@ -219,7 +208,14 @@ public class NotesView extends ScrollPane {
             delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
             delBtn.setOnAction(e -> controller.deleteNote(note, this));
 
-            HBox controls = new HBox(8, syncLbl, editBtn, delBtn);
+            HBox controls;
+            if ("PENDING".equalsIgnoreCase(note.getSyncStatus())) {
+                Label syncLbl = new Label("Pending");
+                syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
+                controls = new HBox(8, syncLbl, editBtn, delBtn);
+            } else {
+                controls = new HBox(8, editBtn, delBtn);
+            }
             controls.setAlignment(Pos.CENTER_RIGHT);
 
             noteCard.getChildren().addAll(completeBox, textLbl, controls);

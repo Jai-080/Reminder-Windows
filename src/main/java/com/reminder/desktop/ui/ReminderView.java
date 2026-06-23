@@ -61,7 +61,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         datePicker.setPrefWidth(150);
         UIUtils.configureDatePicker(datePicker);
 
-        TimePicker timePicker = new TimePicker(9, 0);
+        java.time.LocalTime nowTime = java.time.LocalTime.now();
+        TimePicker timePicker = new TimePicker(nowTime.getHour(), nowTime.getMinute());
 
         Button scheduleBtn = new Button("Schedule");
         scheduleBtn.getStyleClass().add("button-accent");
@@ -201,49 +202,29 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         HBox footer = new HBox(8);
         footer.setAlignment(Pos.CENTER_LEFT);
 
-        // Sync Badge
-        Label syncLbl = new Label();
-        syncLbl.getStyleClass().add("badge-pill");
-        if ("PENDING".equalsIgnoreCase(reminder.getSyncStatus())) {
-            syncLbl.setText("Pending");
-            syncLbl.getStyleClass().add("badge-pending");
-        } else {
-            syncLbl.setText("Synced");
-            syncLbl.getStyleClass().add("badge-synced");
-        }
-
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        footer.getChildren().addAll(syncLbl, spacer);
+        // Sync Badge
+        if ("PENDING".equalsIgnoreCase(reminder.getSyncStatus())) {
+            Label syncLbl = new Label("Pending");
+            syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
+            footer.getChildren().addAll(syncLbl, spacer);
+        } else {
+            footer.getChildren().addAll(spacer);
+        }
 
         if (isPending) {
-            // Expire manually button
-            Button expireBtn = new Button("Expire");
-            expireBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
-            expireBtn.setOnAction(e -> controller.markExpired(reminder, this));
-
-            // Snooze Split/Menu button
-            MenuButton snoozeBtn = new MenuButton("Snooze");
-            snoozeBtn.setStyle("-fx-font-size: 10px; -fx-padding: 2 4;");
-            MenuItem sn1 = new MenuItem("1 Min");
-            sn1.setOnAction(e -> controller.snoozeReminder(reminder, 1, this));
-            MenuItem sn5 = new MenuItem("5 Min");
-            sn5.setOnAction(e -> controller.snoozeReminder(reminder, 5, this));
-            MenuItem sn10 = new MenuItem("10 Min");
-            sn10.setOnAction(e -> controller.snoozeReminder(reminder, 10, this));
-            snoozeBtn.getItems().addAll(sn1, sn5, sn10);
-
-            Button editBtn = new Button("Edit");
-            editBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
-            editBtn.setOnAction(e -> triggerEditDialog(reminder));
+            Button rescheduleBtn = new Button("Reschedule");
+            rescheduleBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
+            rescheduleBtn.setOnAction(e -> triggerEditDialog(reminder));
 
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
             delBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
             delBtn.setOnAction(e -> controller.deleteReminder(reminder, this));
 
-            footer.getChildren().addAll(expireBtn, snoozeBtn, editBtn, delBtn);
+            footer.getChildren().addAll(rescheduleBtn, delBtn);
         } else {
             // Expired card controls
             Button rescheduleBtn = new Button("Reschedule");
@@ -283,7 +264,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         DatePicker datePicker = new DatePicker(ldt.toLocalDate());
         UIUtils.configureDatePicker(datePicker);
 
-        TimePicker timePicker = new TimePicker(ldt.getHour(), ldt.getMinute());
+        java.time.LocalTime nowTime = java.time.LocalTime.now();
+        TimePicker timePicker = new TimePicker(nowTime.getHour(), nowTime.getMinute());
 
         HBox timeRow = new HBox(6, new Label("Time:"), timePicker);
         timeRow.setAlignment(Pos.CENTER_LEFT);

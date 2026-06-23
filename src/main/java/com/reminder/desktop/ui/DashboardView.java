@@ -438,7 +438,7 @@ public class DashboardView extends ScrollPane {
                     if (lastSync == 0) {
                         lastSyncLabel.setText("Last Synced: Never");
                     } else {
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm a");
+                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, hh:mm a", java.util.Locale.ENGLISH);
                         lastSyncLabel.setText("Last Synced: " + sdf.format(new Date(lastSync)));
                     }
                 });

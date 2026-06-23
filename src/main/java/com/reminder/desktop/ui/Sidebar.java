@@ -6,7 +6,9 @@ import com.reminder.desktop.auth.AuthServiceImpl;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -56,10 +58,19 @@ public class Sidebar extends VBox {
         Label userLabel = new Label("Hello, " + (usernameVal != null ? usernameVal : "User") + "!");
         userLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 4 16;");
 
-        Button themeBtn = new Button("Toggle Theme");
-        themeBtn.getStyleClass().add("sidebar-button");
-        themeBtn.setMaxWidth(Double.MAX_VALUE);
-        themeBtn.setOnAction(e -> ThemeManager.toggleTheme());
+        Label modeLabel = new Label("Dark Mode");
+        modeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: -color-text;");
+        javafx.scene.layout.Region space = new javafx.scene.layout.Region();
+        HBox.setHgrow(space, Priority.ALWAYS);
+
+        CheckBox themeToggle = new CheckBox();
+        themeToggle.getStyleClass().add("toggle-switch");
+        themeToggle.setSelected(ThemeManager.isDarkMode());
+        themeToggle.setOnAction(e -> ThemeManager.setDarkMode(themeToggle.isSelected()));
+
+        HBox themeBox = new HBox(10, modeLabel, space, themeToggle);
+        themeBox.setAlignment(Pos.CENTER_LEFT);
+        themeBox.setPadding(new Insets(6, 16, 6, 16));
 
         Button logoutBtn = new Button("Log Out");
         logoutBtn.getStyleClass().add("sidebar-button");
@@ -70,7 +81,7 @@ public class Sidebar extends VBox {
             app.showLogin();
         });
 
-        VBox footer = new VBox(6, userLabel, themeBtn, logoutBtn);
+        VBox footer = new VBox(6, userLabel, themeBox, logoutBtn);
         footer.setPadding(new Insets(24, 0, 0, 0));
 
         this.getChildren().addAll(header, navBox, spacer, footer);

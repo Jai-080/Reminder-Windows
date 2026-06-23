@@ -438,8 +438,10 @@ public class DashboardView extends ScrollPane {
                     if (lastSync == 0) {
                         lastSyncLabel.setText("Last Synced: Never");
                     } else {
-                        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, hh:mm a", java.util.Locale.ENGLISH);
-                        lastSyncLabel.setText("Last Synced: " + sdf.format(new Date(lastSync)));
+                        java.text.SimpleDateFormat dateSdf = new java.text.SimpleDateFormat("MMM dd, ", java.util.Locale.getDefault());
+                        java.text.DateFormat timeFormat = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT);
+                        java.util.Date dateObj = new java.util.Date(lastSync);
+                        lastSyncLabel.setText("Last Synced: " + dateSdf.format(dateObj) + timeFormat.format(dateObj));
                     }
                 });
 

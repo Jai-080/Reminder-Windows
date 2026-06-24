@@ -6,6 +6,7 @@ public class MonthlyPayment {
     private String name;
     private long dueDate;
     private boolean completed;
+    private Long lastPaidAt;
     private Long updatedAt;
     private String syncStatus;
     private Double amount;
@@ -161,5 +162,58 @@ public class MonthlyPayment {
 
     public void setNotificationOffsets(String notificationOffsets) {
         this.notificationOffsets = notificationOffsets;
+    }
+
+    public Long getLastPaidAt() {
+        if (lastPaidAt == null && completed) {
+            return System.currentTimeMillis();
+        }
+        return lastPaidAt;
+    }
+
+    public void setLastPaidAt(Long lastPaidAt) {
+        this.lastPaidAt = lastPaidAt;
+    }
+
+    public boolean isRecentlyPaid(int currentMonth, int currentYear) {
+        Long lpa = getLastPaidAt();
+        if (lpa == null) return false;
+        if (recurrence == RecurrenceType.ONE_TIME) {
+            return true;
+        }
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(lpa);
+        int paidMonth = cal.get(java.util.Calendar.MONTH) + 1;
+        int paidYear = cal.get(java.util.Calendar.YEAR);
+        return paidMonth == currentMonth && paidYear == currentYear;
+    }
+
+    public boolean isRecentlyPaid() {
+        java.util.Calendar now = java.util.Calendar.getInstance();
+        int currentMonth = now.get(java.util.Calendar.MONTH) + 1;
+        int currentYear = now.get(java.util.Calendar.YEAR);
+        return isRecentlyPaid(currentMonth, currentYear);
+    }
+
+    public boolean isUpcoming(int currentMonth, int currentYear) {
+        if (isRecentlyPaid(currentMonth, currentYear)) {
+            return false;
+        }
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dueDate);
+        int dueMonth = cal.get(java.util.Calendar.MONTH) + 1;
+        int dueYear = cal.get(java.util.Calendar.YEAR);
+        return (dueYear < currentYear) || (dueYear == currentYear && dueMonth <= currentMonth);
+    }
+
+    public boolean isDueLater(int currentMonth, int currentYear) {
+        if (isRecentlyPaid(currentMonth, currentYear)) {
+            return false;
+        }
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dueDate);
+        int dueMonth = cal.get(java.util.Calendar.MONTH) + 1;
+        int dueYear = cal.get(java.util.Calendar.YEAR);
+        return (dueYear > currentYear) || (dueYear == currentYear && dueMonth > currentMonth);
     }
 }

@@ -1,6 +1,7 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.models.MonthlyPayment;
+import com.reminder.desktop.models.RecurrenceType;
 import java.time.LocalDate;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -62,7 +63,7 @@ public class PaymentView extends ScrollPane {
         }));
 
         ComboBox<String> recurrenceCombo = new ComboBox<>();
-        recurrenceCombo.getItems().addAll("Monthly", "Quarterly", "Yearly");
+        recurrenceCombo.getItems().addAll("One-Time", "Monthly", "Quarterly", "Yearly");
         recurrenceCombo.setValue("Monthly");
         recurrenceCombo.setPrefWidth(120);
 
@@ -141,61 +142,144 @@ public class PaymentView extends ScrollPane {
             return;
         }
 
+        // Split lists
+        List<MonthlyPayment> upcomingList = new java.util.ArrayList<>();
+        List<MonthlyPayment> recentlyPaidList = new java.util.ArrayList<>();
+        List<MonthlyPayment> dueLaterList = new java.util.ArrayList<>();
+
+        java.util.Calendar nowCal = java.util.Calendar.getInstance();
+        int currentMonth = nowCal.get(java.util.Calendar.MONTH) + 1;
+        int currentYear = nowCal.get(java.util.Calendar.YEAR);
+
         for (MonthlyPayment payment : payments) {
-            HBox paymentCard = new HBox(16);
-            paymentCard.getStyleClass().add("card");
-            paymentCard.setAlignment(Pos.CENTER_LEFT);
-            paymentCard.setPadding(new Insets(12, 16, 12, 16));
-
-            // Complete Checkbox
-            CheckBox completeBox = new CheckBox();
-            completeBox.setSelected(payment.isCompleted());
-            completeBox.setOnAction(e -> controller.toggleComplete(payment, this));
-
-            // Text VBox details
-            VBox details = new VBox(4);
-            Label nameLbl = new Label(payment.getName());
-            nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-            
-            String amountText = payment.getAmount() == null ? "Amount Unknown" : String.format("₹%.2f", payment.getAmount());
-            Label amountLbl = new Label(amountText);
-            amountLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: -color-text-secondary;");
-
-            String recurrenceText = payment.getRecurrence() != null ? payment.getRecurrence().name() : "MONTHLY";
-            Label recurrenceBadge = new Label(recurrenceText);
-            recurrenceBadge.getStyleClass().addAll("badge-pill", "badge-neutral");
-
-            HBox amountAndRecurrence = new HBox(8, amountLbl, recurrenceBadge);
-            amountAndRecurrence.setAlignment(Pos.CENTER_LEFT);
-
-            Label dateLbl = new Label("Due Date: " + dateFormat.format(new Date(payment.getDueDate())));
-            dateLbl.getStyleClass().add("subtitle-label");
-            
-            if (payment.isCompleted()) {
-                nameLbl.setStyle(nameLbl.getStyle() + " -fx-strikethrough: true; -fx-text-fill: -color-text-secondary;");
-                amountLbl.setStyle(amountLbl.getStyle() + " -fx-strikethrough: true;");
+            if (payment.isRecentlyPaid(currentMonth, currentYear)) {
+                recentlyPaidList.add(payment);
+            } else if (payment.isUpcoming(currentMonth, currentYear)) {
+                upcomingList.add(payment);
+            } else if (payment.isDueLater(currentMonth, currentYear)) {
+                dueLaterList.add(payment);
             }
-            details.getChildren().addAll(nameLbl, amountAndRecurrence, dateLbl);
-            HBox.setHgrow(details, Priority.ALWAYS);
-
-            // Controls VBox
-            Button delBtn = new Button("Delete");
-            delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
-            delBtn.setOnAction(e -> controller.deletePayment(payment, this));
-
-            HBox controls;
-            if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
-                Label syncLbl = new Label("Pending");
-                syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
-                controls = new HBox(12, syncLbl, delBtn);
-            } else {
-                controls = new HBox(12, delBtn);
-            }
-            controls.setAlignment(Pos.CENTER_RIGHT);
-
-            paymentCard.getChildren().addAll(completeBox, details, controls);
-            listContainer.getChildren().add(paymentCard);
         }
+
+        // Sort lists
+        upcomingList.sort((p1, p2) -> Long.compare(p1.getDueDate(), p2.getDueDate()));
+        recentlyPaidList.sort((p1, p2) -> Long.compare(p2.getLastPaidAt(), p1.getLastPaidAt()));
+        dueLaterList.sort((p1, p2) -> Long.compare(p1.getDueDate(), p2.getDueDate()));
+
+        long now = System.currentTimeMillis();
+
+        if (!upcomingList.isEmpty()) {
+            Label upcomingHeader = new Label("Upcoming Payments");
+            upcomingHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 8 0 4 0;");
+            listContainer.getChildren().add(upcomingHeader);
+
+            for (MonthlyPayment payment : upcomingList) {
+                listContainer.getChildren().add(createPaymentRow(payment, 0, now));
+            }
+        }
+
+        if (!recentlyPaidList.isEmpty()) {
+            Label recentlyPaidHeader = new Label("Recently Paid");
+            recentlyPaidHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: -color-text-secondary; -fx-padding: 16 0 4 0;");
+            listContainer.getChildren().add(recentlyPaidHeader);
+
+            for (MonthlyPayment payment : recentlyPaidList) {
+                listContainer.getChildren().add(createPaymentRow(payment, 1, now));
+            }
+        }
+
+        if (!dueLaterList.isEmpty()) {
+            Label dueLaterHeader = new Label("Due Later");
+            dueLaterHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: -color-text-secondary; -fx-padding: 16 0 4 0;");
+            listContainer.getChildren().add(dueLaterHeader);
+
+            for (MonthlyPayment payment : dueLaterList) {
+                listContainer.getChildren().add(createPaymentRow(payment, 2, now));
+            }
+        }
+    }
+
+    private HBox createPaymentRow(MonthlyPayment payment, int sectionType, long now) {
+        HBox paymentCard = new HBox(16);
+        paymentCard.getStyleClass().add("card");
+        paymentCard.setAlignment(Pos.CENTER_LEFT);
+        paymentCard.setPadding(new Insets(12, 16, 12, 16));
+
+        // Complete Checkbox
+        CheckBox completeBox = new CheckBox();
+        if (sectionType == 1) { // Recently Paid
+            completeBox.setSelected(true);
+            completeBox.setDisable(true);
+        } else if (sectionType == 2) { // Due Later
+            completeBox.setSelected(false);
+            completeBox.setDisable(true);
+        } else { // Upcoming
+            completeBox.setSelected(false);
+            completeBox.setOnAction(e -> controller.toggleComplete(payment, this));
+        }
+
+        // Text VBox details
+        VBox details = new VBox(4);
+        Label nameLbl = new Label(payment.getName());
+        if (sectionType == 1) {
+            nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: -color-text-secondary;");
+        } else {
+            nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        }
+        
+        String amountText = payment.getAmount() == null ? "Amount Unknown" : String.format("₹%.2f", payment.getAmount());
+        Label amountLbl = new Label(amountText);
+        amountLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: -color-text-secondary;");
+
+        String recurrenceText = payment.getRecurrence() != null ? payment.getRecurrence().name() : "MONTHLY";
+        Label recurrenceBadge = new Label(recurrenceText);
+        recurrenceBadge.getStyleClass().addAll("badge-pill", "badge-neutral");
+
+        HBox amountAndRecurrence = new HBox(8, amountLbl, recurrenceBadge);
+        amountAndRecurrence.setAlignment(Pos.CENTER_LEFT);
+
+        Label dateLbl = new Label();
+        dateLbl.getStyleClass().add("subtitle-label");
+
+        if (sectionType == 1) {
+            if (payment.getRecurrence() == RecurrenceType.ONE_TIME) {
+                dateLbl.setText("✓ Paid  |  Due: " + dateFormat.format(new Date(payment.getDueDate())));
+            } else {
+                dateLbl.setText("✓ Paid  |  Next Due: " + dateFormat.format(new Date(payment.getDueDate())));
+            }
+        } else {
+            if (payment.getDueDate() < now) {
+                dateLbl.setText("Due Date: " + dateFormat.format(new Date(payment.getDueDate())) + " [Overdue]");
+                dateLbl.setStyle("-fx-text-fill: -color-danger; -fx-font-weight: bold;");
+            } else {
+                dateLbl.setText("Due Date: " + dateFormat.format(new Date(payment.getDueDate())));
+            }
+        }
+
+        details.getChildren().addAll(nameLbl, amountAndRecurrence, dateLbl);
+        HBox.setHgrow(details, Priority.ALWAYS);
+
+        // Controls VBox
+        Button delBtn = new Button("Delete");
+        delBtn.getStyleClass().add("button-danger");
+        delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+        delBtn.setOnAction(e -> controller.deletePayment(payment, this));
+
+        HBox controls;
+        if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
+            Label syncLbl = new Label("Pending");
+            syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
+            controls = new HBox(12, syncLbl, delBtn);
+        } else {
+            controls = new HBox(12, delBtn);
+        }
+        controls.setAlignment(Pos.CENTER_RIGHT);
+
+        if (sectionType == 2) {
+            paymentCard.getChildren().addAll(details, controls);
+        } else {
+            paymentCard.getChildren().addAll(completeBox, details, controls);
+        }
+        return paymentCard;
     }
 }

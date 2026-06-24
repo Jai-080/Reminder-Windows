@@ -78,9 +78,16 @@ public class MonthlyPaymentRepository {
     }
 
     public void togglePaymentCompleted(MonthlyPayment payment) throws Exception {
-        boolean previouslyCompleted = payment.isCompleted();
-        if (!previouslyCompleted) {
-            // Marking completed -> Auto-Renew!
+        if (payment.getRecurrence() == RecurrenceType.ONE_TIME) {
+            payment.setLastPaidAt(System.currentTimeMillis());
+            payment.setCompleted(false);
+            payment.setSyncStatus("PENDING");
+            payment.setUpdatedAt(System.currentTimeMillis());
+            paymentDao.updatePayment(payment);
+
+            // Cancel alarm, do not reschedule
+            ReminderScheduler.getInstance().cancelPayment(payment);
+        } else {
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(payment.getDueDate());
             if (payment.getRecurrence() == RecurrenceType.QUARTERLY) {
@@ -93,21 +100,13 @@ public class MonthlyPaymentRepository {
             long newDueDate = cal.getTimeInMillis();
 
             payment.setDueDate(newDueDate);
+            payment.setLastPaidAt(System.currentTimeMillis());
             payment.setCompleted(false);
             payment.setSyncStatus("PENDING");
             payment.setUpdatedAt(System.currentTimeMillis());
             paymentDao.updatePayment(payment);
 
             // Reschedule (cancel previous, schedule next)
-            ReminderScheduler.getInstance().cancelPayment(payment);
-            ReminderScheduler.getInstance().schedulePayment(payment);
-        } else {
-            // Unmarking completed
-            payment.setCompleted(false);
-            payment.setSyncStatus("PENDING");
-            payment.setUpdatedAt(System.currentTimeMillis());
-            paymentDao.updatePayment(payment);
-
             ReminderScheduler.getInstance().cancelPayment(payment);
             ReminderScheduler.getInstance().schedulePayment(payment);
         }

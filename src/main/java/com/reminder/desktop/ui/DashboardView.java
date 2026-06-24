@@ -305,24 +305,24 @@ public class DashboardView extends ScrollPane {
 
                 // Fetch Payments Metrics
                 List<MonthlyPayment> allPaymentsList = paymentRepo.getAllPayments();
-                List<MonthlyPayment> pendingPayments = allPaymentsList.stream()
-                        .filter(p -> !p.isCompleted())
+                int currentMonth = today.getMonthValue();
+                int currentYear = today.getYear();
+
+                List<MonthlyPayment> upcomingPayments = allPaymentsList.stream()
+                        .filter(p -> p.isUpcoming(currentMonth, currentYear))
                         .collect(Collectors.toList());
-                long activePayments = pendingPayments.size();
-                List<MonthlyPayment> dashboardPayments = pendingPayments.stream()
+                long activePayments = upcomingPayments.size();
+                List<MonthlyPayment> dashboardPayments = upcomingPayments.stream()
                         .limit(3)
                         .collect(Collectors.toList());
 
                 long nowMs = System.currentTimeMillis();
-                long overduePayments = pendingPayments.stream()
+                long overduePayments = upcomingPayments.stream()
                         .filter(p -> p.getDueDate() < nowMs)
                         .count();
 
                 // Compute payments due this calendar month
-                int currentMonth = today.getMonthValue();
-                int currentYear = today.getYear();
-
-                long dueThisMonthCount = pendingPayments.stream()
+                long dueThisMonthCount = upcomingPayments.stream()
                         .filter(p -> {
                             LocalDate dueDate = java.time.Instant.ofEpochMilli(p.getDueDate())
                                     .atZone(java.time.ZoneId.systemDefault())
@@ -331,7 +331,7 @@ public class DashboardView extends ScrollPane {
                         })
                         .count();
 
-                double pendingAmountThisMonth = pendingPayments.stream()
+                double pendingAmountThisMonth = upcomingPayments.stream()
                         .filter(p -> {
                             LocalDate dueDate = java.time.Instant.ofEpochMilli(p.getDueDate())
                                     .atZone(java.time.ZoneId.systemDefault())

@@ -10,8 +10,8 @@ import java.util.List;
 public class MonthlyPaymentDao {
 
     public void insertPayment(MonthlyPayment payment) throws SQLException {
-        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount, recurrence, notification_offsets) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount, recurrence, notification_offsets, last_paid_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (payment.getServerId() != null) {
@@ -38,6 +38,11 @@ public class MonthlyPaymentDao {
                 pstmt.setString(9, payment.getNotificationOffsets());
             } else {
                 pstmt.setString(9, "0");
+            }
+            if (payment.getLastPaidAt() != null) {
+                pstmt.setLong(10, payment.getLastPaidAt());
+            } else {
+                pstmt.setNull(10, Types.BIGINT);
             }
             
             pstmt.executeUpdate();
@@ -75,7 +80,7 @@ public class MonthlyPaymentDao {
                     payment.getId(), payment.getServerId(), payment.getSyncStatus(), payment.getUpdatedAt());
 
             String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
-                    "completed = ?, updated_at = ?, sync_status = ?, amount = ?, recurrence = ?, notification_offsets = ? WHERE id = ?";
+                    "completed = ?, updated_at = ?, sync_status = ?, amount = ?, recurrence = ?, notification_offsets = ?, last_paid_at = ? WHERE id = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 if (payment.getServerId() != null) {
                     pstmt.setLong(1, payment.getServerId());
@@ -102,7 +107,12 @@ public class MonthlyPaymentDao {
                 } else {
                     pstmt.setString(9, "0");
                 }
-                pstmt.setInt(10, payment.getId());
+                if (payment.getLastPaidAt() != null) {
+                    pstmt.setLong(10, payment.getLastPaidAt());
+                } else {
+                    pstmt.setNull(10, Types.BIGINT);
+                }
+                pstmt.setInt(11, payment.getId());
                 
                 pstmt.executeUpdate();
             }
@@ -222,8 +232,10 @@ public class MonthlyPaymentDao {
         if (rs.wasNull() || notificationOffsets == null) {
             notificationOffsets = "0";
         }
+        long lastPaidAtVal = rs.getLong("last_paid_at");
+        Long lastPaidAt = rs.wasNull() ? null : lastPaidAtVal;
         
-        return new MonthlyPayment(
+        MonthlyPayment payment = new MonthlyPayment(
                 rs.getInt("id"),
                 serverId,
                 rs.getString("name"),
@@ -235,5 +247,7 @@ public class MonthlyPaymentDao {
                 recurrence,
                 notificationOffsets
         );
+        payment.setLastPaidAt(lastPaidAt);
+        return payment;
     }
 }

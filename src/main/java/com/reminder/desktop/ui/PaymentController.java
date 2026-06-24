@@ -47,7 +47,8 @@ public class PaymentController {
                 com.reminder.desktop.models.RecurrenceType recurrence = com.reminder.desktop.models.RecurrenceType.MONTHLY;
                 if (recurrenceStr != null) {
                     try {
-                        recurrence = com.reminder.desktop.models.RecurrenceType.valueOf(recurrenceStr.toUpperCase());
+                        String cleanRec = recurrenceStr.replace("-", "_").replace(" ", "_").toUpperCase();
+                        recurrence = com.reminder.desktop.models.RecurrenceType.valueOf(cleanRec);
                     } catch (IllegalArgumentException ignored) {}
                 }
 

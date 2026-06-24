@@ -74,7 +74,11 @@ public class DatabaseManager {
                 "sync_status TEXT, " +
                 "amount REAL, " +
                 "recurrence TEXT DEFAULT 'MONTHLY', " +
-                "notification_offsets TEXT DEFAULT '0'" +
+                "notification_offsets TEXT DEFAULT '0', " +
+                "last_completed_month INTEGER, " +
+                "last_completed_year INTEGER, " +
+                "completed_at INTEGER, " +
+                "last_paid_at INTEGER" +
                 ");";
 
         try (Statement stmt = conn.createStatement()) {
@@ -93,6 +97,26 @@ public class DatabaseManager {
             }
             try {
                 stmt.execute("ALTER TABLE monthly_payments ADD COLUMN notification_offsets TEXT DEFAULT '0'");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_completed_month INTEGER");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_completed_year INTEGER");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN completed_at INTEGER");
+            } catch (SQLException e) {
+                // Column already exists
+            }
+            try {
+                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_paid_at INTEGER");
             } catch (SQLException e) {
                 // Column already exists
             }

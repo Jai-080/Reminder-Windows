@@ -72,17 +72,15 @@ public class ReminderScheduler {
                 List<MonthlyPayment> allPayments = paymentDao.getAllPayments();
                 long startOfToday = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
                 for (MonthlyPayment p : allPayments) {
-                    if (!p.isCompleted()) {
-                        // Avoid triggering popup notifications for historical uncompleted monthly payments
-                        if (p.getDueDate() >= startOfToday) {
-                            if (p.getDueDate() <= now) {
-                                triggerPayment(p, 0);
-                            } else {
-                                schedulePayment(p);
-                            }
+                    // Avoid triggering popup notifications for historical uncompleted monthly payments
+                    if (p.getDueDate() >= startOfToday) {
+                        if (p.getDueDate() <= now) {
+                            triggerPayment(p, 0);
                         } else {
-                            System.out.println("Skipping alert for historical uncompleted payment: " + p.getName());
+                            schedulePayment(p);
                         }
+                    } else {
+                        System.out.println("Skipping alert for historical uncompleted payment: " + p.getName());
                     }
                 }
             } catch (SQLException e) {
@@ -121,46 +119,20 @@ public class ReminderScheduler {
         String key = "payment_" + payment.getId();
         cancelTask(key);
 
-        if (payment.isCompleted()) return;
-
-        // Parse notification offsets CSV
-        String offsetsStr = payment.getNotificationOffsets();
-        if (offsetsStr == null || offsetsStr.trim().isEmpty()) {
-            offsetsStr = "0";
-        }
-
-        String[] parts = offsetsStr.split(",");
         long now = System.currentTimeMillis();
-        long nextAlertTime = -1;
-        int nextOffsetDays = -1;
+        long nextAlertTime = payment.getDueDate();
 
-        for (String part : parts) {
-            try {
-                int days = Integer.parseInt(part.trim());
-                long alertTime = payment.getDueDate() - ((long) days * 24 * 60 * 60 * 1000);
-                if (alertTime > now) {
-                    if (nextAlertTime == -1 || alertTime < nextAlertTime) {
-                        nextAlertTime = alertTime;
-                        nextOffsetDays = days;
-                    }
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-
-        // If no future alert offset exists, we don't schedule anything.
-        if (nextAlertTime == -1) {
-            System.out.printf("[PAYMENT SCHEDULER] No future alerts to schedule for localId=%d%n", payment.getId());
+        if (nextAlertTime <= now) {
+            System.out.printf("[PAYMENT SCHEDULER] Due date already passed or is now for localId=%d%n", payment.getId());
             return;
         }
 
         long delay = nextAlertTime - now;
-        if (delay < 0) delay = 0;
 
-        final int offsetDaysVal = nextOffsetDays;
-        ScheduledFuture<?> future = executor.schedule(() -> triggerPayment(payment, offsetDaysVal), delay, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = executor.schedule(() -> triggerPayment(payment, 0), delay, TimeUnit.MILLISECONDS);
         scheduledTasks.put(key, future);
-        System.out.printf("[PAYMENT SCHEDULER] Scheduling payment: localId=%d, serverId=%d, dueDate=%d, offset=%d, success=true%n",
-                payment.getId(), payment.getServerId() != null ? payment.getServerId() : -1, payment.getDueDate(), offsetDaysVal);
+        System.out.printf("[PAYMENT SCHEDULER] Scheduling payment: localId=%d, serverId=%d, dueDate=%d, success=true%n",
+                payment.getId(), payment.getServerId() != null ? payment.getServerId() : -1, payment.getDueDate());
     }
 
     public void cancelPayment(MonthlyPayment payment) {
@@ -213,12 +185,10 @@ public class ReminderScheduler {
     }
 
     private void triggerPayment(MonthlyPayment payment, int offsetDays) {
-        System.out.printf("Triggering monthly payment alert: %s (due in %d days)%n", payment.getName(), offsetDays);
+        System.out.printf("Triggering monthly payment alert: %s%n", payment.getName());
 
-        String title = offsetDays == 0 ? "Payment Due Today" : "Payment Due Soon";
-        String message = offsetDays == 0 ? 
-                "Payment is due today: " + payment.getName() : 
-                "Payment is due in " + offsetDays + " days: " + payment.getName();
+        String title = "Payment Due Today";
+        String message = "Payment is due today: " + payment.getName();
 
         // Show Notification
         NotificationManager.getInstance().showWarningNotification(title, message);
@@ -229,8 +199,5 @@ public class ReminderScheduler {
                 l.onPaymentDue(payment);
             }
         });
-
-        // Loop propagation: automatically schedule the next offset alarm
-        schedulePayment(payment);
     }
 }

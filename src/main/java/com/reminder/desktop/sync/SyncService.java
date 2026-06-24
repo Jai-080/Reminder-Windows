@@ -440,6 +440,7 @@ public class SyncService {
                         localPayment.setName(dto.getName());
                         localPayment.setDueDate(dto.getDueDate());
                         localPayment.setCompleted(dto.getCompleted() != null && dto.getCompleted());
+                        localPayment.setLastPaidAt(dto.getLastPaidAt());
                         localPayment.setAmount(dto.getAmount());
                         
                         String recStr = dto.getRecurrence();
@@ -456,7 +457,7 @@ public class SyncService {
                         localPayment.setSyncStatus("SYNCED");
                         paymentDao.updatePayment(localPayment);
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelPayment(localPayment);
-                        if (!localPayment.isCompleted() && localPayment.getDueDate() >= startOfToday) {
+                        if (!localPayment.isRecentlyPaid() && localPayment.getDueDate() >= startOfToday) {
                             com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(localPayment);
                         }
                     }
@@ -482,8 +483,9 @@ public class SyncService {
                             rec,
                             offsets
                     );
+                    newPayment.setLastPaidAt(dto.getLastPaidAt());
                     paymentDao.insertPayment(newPayment);
-                    if (!newPayment.isCompleted() && newPayment.getDueDate() >= startOfToday) {
+                    if (!newPayment.isRecentlyPaid() && newPayment.getDueDate() >= startOfToday) {
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(newPayment);
                     }
                 }
@@ -502,6 +504,7 @@ public class SyncService {
                     local.getRecurrence() != null ? local.getRecurrence().name() : "MONTHLY",
                     local.getNotificationOffsets() != null ? local.getNotificationOffsets() : "0"
             );
+            dto.setLastPaidAt(local.getLastPaidAt());
             dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
             if (local.getServerId() == null) {
                 MonthlyPaymentDto responseDto = apiClient.post("/api/payments", dto, MonthlyPaymentDto.class);

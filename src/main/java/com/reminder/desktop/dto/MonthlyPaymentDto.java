@@ -8,6 +8,7 @@ public class MonthlyPaymentDto {
     private String name;
     private Long dueDate;
     private Boolean completed;
+    private Long lastPaidAt;
     private Double amount;
     private String recurrence;
     private String notificationOffsets;
@@ -127,5 +128,13 @@ public class MonthlyPaymentDto {
 
     public void setNotificationOffsets(String notificationOffsets) {
         this.notificationOffsets = notificationOffsets;
+    }
+
+    public Long getLastPaidAt() {
+        return lastPaidAt;
+    }
+
+    public void setLastPaidAt(Long lastPaidAt) {
+        this.lastPaidAt = lastPaidAt;
     }
 }

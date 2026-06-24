@@ -40,7 +40,7 @@ public class Sidebar extends VBox {
         dashBtn = createNavButton("Dashboard");
         notesBtn = createNavButton("Quick Notes");
         remindersBtn = createNavButton("Reminders");
-        paymentsBtn = createNavButton("Monthly Payments");
+        paymentsBtn = createNavButton("Payments");
 
         dashBtn.setOnAction(e -> layout.showView("Dashboard"));
         notesBtn.setOnAction(e -> layout.showView("Notes"));

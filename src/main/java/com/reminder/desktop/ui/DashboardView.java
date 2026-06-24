@@ -129,7 +129,7 @@ public class DashboardView extends ScrollPane {
         remindersCard.getChildren().addAll(remindersMainMetric, remindersSubMetric);
 
         // Card 3: Payments
-        VBox paymentsCard = createMetricCard("MONTHLY PAYMENTS", "Payments");
+        VBox paymentsCard = createMetricCard("PAYMENTS", "Payments");
         paymentsMainMetric = new Label("0");
         paymentsMainMetric.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
         paymentsSubMetric = new Label("0 overdue");

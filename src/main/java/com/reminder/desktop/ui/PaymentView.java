@@ -29,9 +29,9 @@ public class PaymentView extends ScrollPane {
         content.setAlignment(Pos.TOP_LEFT);
 
         // Header Title
-        Label title = new Label("Monthly Payments");
+        Label title = new Label("Payments");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
-        Label subtitle = new Label("Track your monthly expenses. Triggers foreground alerts on due dates.");
+        Label subtitle = new Label("Track your expenses. Triggers foreground alerts on due dates.");
         subtitle.getStyleClass().add("subtitle-label");
         VBox headerBox = new VBox(4, title, subtitle);
 
@@ -40,7 +40,7 @@ public class PaymentView extends ScrollPane {
         formCard.getStyleClass().add("card");
         formCard.setPadding(new Insets(16));
 
-        Label formTitle = new Label("Add Monthly Payment");
+        Label formTitle = new Label("Add Payment");
         formTitle.getStyleClass().add("section-header");
         formTitle.setStyle("-fx-font-size: 14px;");
 
@@ -131,7 +131,7 @@ public class PaymentView extends ScrollPane {
             Label iconLbl = new Label("");
             iconLbl.getStyleClass().add("empty-state-icon");
             
-            Label titleLbl = new Label("No monthly payments yet");
+            Label titleLbl = new Label("No payments yet");
             titleLbl.getStyleClass().add("empty-state-title");
             
             Label descLbl = new Label("Set up expenses and due dates above.");

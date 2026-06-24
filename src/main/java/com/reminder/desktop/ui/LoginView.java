@@ -51,8 +51,6 @@ public class LoginView extends VBox {
         passField.setPromptText("••••••••");
         passBox.getChildren().addAll(passLabel, passField);
 
-        CheckBox rememberMe = new CheckBox("Remember Login");
-
         Label errorLabel = new Label();
         errorLabel.setStyle("-fx-text-fill: -color-danger; -fx-font-weight: bold;");
         errorLabel.setWrapText(true);
@@ -74,7 +72,6 @@ public class LoginView extends VBox {
         card.getChildren().addAll(
                 title, subtitle,
                 emailBox, passBox,
-                rememberMe,
                 errorLabel,
                 signInBtn,
                 createAccountLink
@@ -86,7 +83,6 @@ public class LoginView extends VBox {
         signInBtn.setOnAction(e -> controller.handleLogin(
                 emailField,
                 passField,
-                rememberMe,
                 errorLabel,
                 signInBtn
         ));

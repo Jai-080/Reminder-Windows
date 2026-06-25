@@ -1,5 +1,6 @@
 package com.reminder.desktop.ui;
 
+import com.reminder.desktop.config.ServerConfig;
 import javafx.scene.control.DatePicker;
 import javafx.util.StringConverter;
 import java.time.LocalDate;
@@ -54,9 +55,15 @@ public class UIUtils {
                 message = message.replace(hostOnly, "the server");
             }
         }
-        message = message.replace("115.99.50.73:50000", "the server")
-                         .replace("115.99.50.73", "the server")
-                         .replace("localhost:8080", "the server")
+        // Fallbacks
+        String fallbackHost = ServerConfig.getServerHost();
+        if (!fallbackHost.isEmpty()) {
+            message = message.replace(fallbackHost, "the server");
+            if (fallbackHost.contains(":")) {
+                message = message.replace(fallbackHost.split(":")[0], "the server");
+            }
+        }
+        message = message.replace("localhost:8080", "the server")
                          .replace("10.0.2.2:8080", "the server");
         return message;
     }

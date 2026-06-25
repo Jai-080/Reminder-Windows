@@ -1,5 +1,6 @@
 package com.reminder.desktop.auth;
 
+import com.reminder.desktop.config.ServerConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -107,6 +108,14 @@ public class TokenStorage {
         return token != null && !token.trim().isEmpty();
     }
 
+    private static String getCleanDefaultUrl() {
+        String url = ServerConfig.SERVER_URL;
+        if (url != null && url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+        return url;
+    }
+
     public static synchronized void setServerUrl(String serverUrl) {
         if (serverUrl != null) {
             serverUrl = serverUrl.trim();
@@ -114,11 +123,11 @@ public class TokenStorage {
                 serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
             }
         }
-        properties.setProperty("serverUrl", serverUrl != null && !serverUrl.isEmpty() ? serverUrl : "http://115.99.50.73:50000");
+        properties.setProperty("serverUrl", serverUrl != null && !serverUrl.isEmpty() ? serverUrl : getCleanDefaultUrl());
         save();
     }
 
     public static synchronized String getServerUrl() {
-        return properties.getProperty("serverUrl", "http://115.99.50.73:50000");
+        return properties.getProperty("serverUrl", getCleanDefaultUrl());
     }
 }

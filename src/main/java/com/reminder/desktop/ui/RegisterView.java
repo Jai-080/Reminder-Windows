@@ -57,7 +57,7 @@ public class RegisterView extends VBox {
         VBox urlBox = new VBox(6);
         Label urlLabel = new Label("Base Server URL");
         TextField urlField = new TextField();
-        urlField.setPromptText("http://localhost:8080");
+        urlField.setPromptText("http://115.99.50.73:50000");
         urlField.setText(TokenStorage.getServerUrl());
         urlBox.getChildren().addAll(urlLabel, urlField);
 

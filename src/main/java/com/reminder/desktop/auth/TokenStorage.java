@@ -114,11 +114,11 @@ public class TokenStorage {
                 serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
             }
         }
-        properties.setProperty("serverUrl", serverUrl != null && !serverUrl.isEmpty() ? serverUrl : "http://localhost:8080");
+        properties.setProperty("serverUrl", serverUrl != null && !serverUrl.isEmpty() ? serverUrl : "http://115.99.50.73:50000");
         save();
     }
 
     public static synchronized String getServerUrl() {
-        return properties.getProperty("serverUrl", "http://localhost:8080");
+        return properties.getProperty("serverUrl", "http://115.99.50.73:50000");
     }
 }

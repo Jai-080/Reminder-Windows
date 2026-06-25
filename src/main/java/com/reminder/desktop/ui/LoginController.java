@@ -49,7 +49,7 @@ public class LoginController {
                 });
             } catch (Exception ex) {
                 Platform.runLater(() -> {
-                    errorLabel.setText(ex.getMessage());
+                    errorLabel.setText(UIUtils.sanitizeError(ex.getMessage()));
                     errorLabel.setVisible(true);
                     signInBtn.setDisable(false);
                 });

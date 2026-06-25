@@ -102,7 +102,7 @@ public class WebSocketManager {
                     "Authorization:Bearer " + TokenStorage.getAccessToken() + "\n" +
                     "\n" +
                     "\u0000";
-            System.out.println("WebSocketManager: STOMP Frame Outgoing [CONNECT]:\n" + connectFrame);
+            System.out.println("WebSocketManager: STOMP Frame Outgoing [CONNECT]");
             ws.sendText(connectFrame, true);
             ws.request(1);
         }
@@ -157,7 +157,7 @@ public class WebSocketManager {
         System.out.println("WebSocketManager: Received STOMP command " + command);
 
         if ("CONNECTED".equals(command)) {
-            System.out.println("WebSocketManager: STOMP Frame Incoming [CONNECTED]:\n" + frameText);
+            System.out.println("WebSocketManager: STOMP Frame Incoming [CONNECTED]");
             synchronized (this) {
                 isConnected = true;
                 isConnecting = false;
@@ -179,7 +179,7 @@ public class WebSocketManager {
 
         } else if ("MESSAGE".equals(command)) {
             System.out.println("MESSAGE received");
-            System.out.println("WebSocketManager: STOMP Frame Incoming [MESSAGE]:\n" + frameText);
+            System.out.println("WebSocketManager: STOMP Frame Incoming [MESSAGE]");
             int bodyStartIndex = -1;
             for (int i = 1; i < lines.length; i++) {
                 if (lines[i].trim().isEmpty()) {
@@ -194,7 +194,7 @@ public class WebSocketManager {
                     bodyBuilder.append(lines[i]);
                 }
                 String body = bodyBuilder.toString().replace("\u0000", "").trim();
-                System.out.println("WebSocketManager: Received WebSocket SyncEvent payload: " + body);
+                System.out.println("WebSocketManager: Received WebSocket SyncEvent");
 
                 // Trigger the existing sync engine
                 System.out.println("WebSocketManager: Sync event received. Triggering Sync Service.");
@@ -209,7 +209,7 @@ public class WebSocketManager {
         userWantsConnection = false;
         if (webSocket != null) {
             String disconnectFrame = "DISCONNECT\n\n\u0000";
-            System.out.println("WebSocketManager: STOMP Frame Outgoing [DISCONNECT]:\n" + disconnectFrame);
+            System.out.println("WebSocketManager: STOMP Frame Outgoing [DISCONNECT]");
             try {
                 webSocket.sendText(disconnectFrame, true);
             } catch (Exception ignored) {}

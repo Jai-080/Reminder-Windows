@@ -14,7 +14,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 public class AuthServiceImpl implements AuthService {
-    private static final String BASE_URL = "http://localhost:8080";
+    private String getBaseUrl() {
+        return TokenStorage.getServerUrl();
+    }
     private final HttpClient client;
     private final ObjectMapper mapper;
 
@@ -35,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
         String jsonPayload = mapper.writeValueAsString(req);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/api/auth/login"))
+                .uri(URI.create(getBaseUrl() + "/api/auth/login"))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
@@ -76,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         String jsonPayload = mapper.writeValueAsString(req);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/api/auth/register"))
+                .uri(URI.create(getBaseUrl() + "/api/auth/register"))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
@@ -115,7 +117,7 @@ public class AuthServiceImpl implements AuthService {
                 String jsonPayload = mapper.writeValueAsString(req);
 
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(BASE_URL + "/api/auth/logout"))
+                        .uri(URI.create(getBaseUrl() + "/api/auth/logout"))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                         .build();
@@ -142,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
         String jsonPayload = mapper.writeValueAsString(req);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/api/auth/refresh"))
+                .uri(URI.create(getBaseUrl() + "/api/auth/refresh"))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))

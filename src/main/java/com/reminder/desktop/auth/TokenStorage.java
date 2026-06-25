@@ -106,4 +106,19 @@ public class TokenStorage {
         String token = getAccessToken();
         return token != null && !token.trim().isEmpty();
     }
+
+    public static synchronized void setServerUrl(String serverUrl) {
+        if (serverUrl != null) {
+            serverUrl = serverUrl.trim();
+            if (serverUrl.endsWith("/")) {
+                serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
+            }
+        }
+        properties.setProperty("serverUrl", serverUrl != null && !serverUrl.isEmpty() ? serverUrl : "http://localhost:8080");
+        save();
+    }
+
+    public static synchronized String getServerUrl() {
+        return properties.getProperty("serverUrl", "http://localhost:8080");
+    }
 }

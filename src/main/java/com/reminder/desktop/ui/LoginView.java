@@ -1,6 +1,7 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.MainApplication;
+import com.reminder.desktop.auth.TokenStorage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -51,6 +52,13 @@ public class LoginView extends VBox {
         passField.setPromptText("••••••••");
         passBox.getChildren().addAll(passLabel, passField);
 
+        VBox urlBox = new VBox(6);
+        Label urlLabel = new Label("Base Server URL");
+        TextField urlField = new TextField();
+        urlField.setPromptText("http://localhost:8080");
+        urlField.setText(TokenStorage.getServerUrl());
+        urlBox.getChildren().addAll(urlLabel, urlField);
+
         Label errorLabel = new Label();
         errorLabel.setStyle("-fx-text-fill: -color-danger; -fx-font-weight: bold;");
         errorLabel.setWrapText(true);
@@ -71,7 +79,7 @@ public class LoginView extends VBox {
 
         card.getChildren().addAll(
                 title, subtitle,
-                emailBox, passBox,
+                emailBox, passBox, urlBox,
                 errorLabel,
                 signInBtn,
                 createAccountLink
@@ -83,6 +91,7 @@ public class LoginView extends VBox {
         signInBtn.setOnAction(e -> controller.handleLogin(
                 emailField,
                 passField,
+                urlField,
                 errorLabel,
                 signInBtn
         ));

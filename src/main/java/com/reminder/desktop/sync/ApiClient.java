@@ -13,7 +13,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://localhost:8080";
     private static ApiClient instance;
     private final HttpClient client;
     private final ObjectMapper mapper;
@@ -59,7 +58,7 @@ public class ApiClient {
     }
 
     private <T> T executeInternal(String endpoint, String method, Object body, Class<T> responseClass, boolean isRetry) throws Exception {
-        String url = BASE_URL + endpoint;
+        String url = TokenStorage.getServerUrl() + endpoint;
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/json");

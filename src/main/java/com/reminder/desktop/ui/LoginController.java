@@ -2,6 +2,7 @@ package com.reminder.desktop.ui;
 
 import com.reminder.desktop.auth.AuthService;
 import com.reminder.desktop.auth.AuthServiceImpl;
+import com.reminder.desktop.auth.TokenStorage;
 import com.reminder.desktop.MainApplication;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
@@ -17,18 +18,22 @@ public class LoginController {
         this.authService = new AuthServiceImpl();
     }
 
-    public void handleLogin(TextField emailField, TextField passField, Label errorLabel, Button signInBtn) {
+    public void handleLogin(TextField emailField, TextField passField, TextField urlField, Label errorLabel, Button signInBtn) {
         String email = emailField.getText();
         String password = passField.getText();
+        String serverUrl = urlField.getText();
 
-        if (email.trim().isEmpty() || password.trim().isEmpty()) {
-            errorLabel.setText("Email and password are required.");
+        if (email.trim().isEmpty() || password.trim().isEmpty() || serverUrl.trim().isEmpty()) {
+            errorLabel.setText("Email, password, and server URL are required.");
             errorLabel.setVisible(true);
             return;
         }
 
         signInBtn.setDisable(true);
         errorLabel.setVisible(false);
+
+        // Save server URL first
+        TokenStorage.setServerUrl(serverUrl.trim());
 
         new Thread(() -> {
             try {

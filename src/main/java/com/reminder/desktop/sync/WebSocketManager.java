@@ -66,8 +66,13 @@ public class WebSocketManager {
             return;
         }
 
-        // Default BASE_URL in ApiClient is "http://localhost:8080". We map it to ws://localhost:8080/ws
-        String wsUrl = "ws://localhost:8080/ws?token=" + token;
+        // Format WebSocket URL from Base URL
+        String baseUrl = TokenStorage.getServerUrl();
+        String wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://");
+        if (!wsUrl.endsWith("/")) {
+            wsUrl += "/";
+        }
+        wsUrl += "ws?token=" + token;
         System.out.println("WebSocketManager: Connecting to " + wsUrl);
 
         HttpClient client = HttpClient.newHttpClient();

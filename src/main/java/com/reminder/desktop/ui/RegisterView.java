@@ -1,6 +1,7 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.MainApplication;
+import com.reminder.desktop.config.ServerConfig;
 import com.reminder.desktop.auth.TokenStorage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,7 +58,7 @@ public class RegisterView extends VBox {
         VBox urlBox = new VBox(6);
         Label urlLabel = new Label("Base Server URL");
         TextField urlField = new TextField();
-        urlField.setPromptText("http://localhost:8080");
+        urlField.setPromptText(ServerConfig.SERVER_URL.replaceAll("/$", ""));
         urlField.setText(TokenStorage.getServerUrl());
         urlBox.getChildren().addAll(urlLabel, urlField);
 

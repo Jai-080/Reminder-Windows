@@ -1,5 +1,6 @@
 package com.reminder.desktop.ui;
 
+import com.reminder.desktop.config.ServerConfig;
 import javafx.scene.control.DatePicker;
 import javafx.util.StringConverter;
 import java.time.LocalDate;
@@ -40,5 +41,30 @@ public class UIUtils {
                 return null;
             }
         });
+    }
+
+    public static String sanitizeError(String message) {
+        if (message == null) {
+            return null;
+        }
+        String serverUrl = com.reminder.desktop.auth.TokenStorage.getServerUrl();
+        if (serverUrl != null && !serverUrl.isEmpty()) {
+            message = message.replace(serverUrl, "the server");
+            String hostOnly = serverUrl.replace("http://", "").replace("https://", "");
+            if (!hostOnly.isEmpty()) {
+                message = message.replace(hostOnly, "the server");
+            }
+        }
+        // Fallbacks
+        String fallbackHost = ServerConfig.getServerHost();
+        if (!fallbackHost.isEmpty()) {
+            message = message.replace(fallbackHost, "the server");
+            if (fallbackHost.contains(":")) {
+                message = message.replace(fallbackHost.split(":")[0], "the server");
+            }
+        }
+        message = message.replace("localhost:8080", "the server")
+                         .replace("10.0.2.2:8080", "the server");
+        return message;
     }
 }

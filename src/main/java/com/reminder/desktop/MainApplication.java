@@ -8,6 +8,7 @@ import com.reminder.desktop.ui.RegisterView;
 import com.reminder.desktop.ui.ThemeManager;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
@@ -43,6 +44,11 @@ public class MainApplication extends Application {
         instance = this;
         this.primaryStage = stage;
         primaryStage.setTitle("Reminder Desktop");
+        try {
+            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/ic_launcher.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load application window icon: " + e.getMessage());
+        }
         primaryStage.setMinWidth(900);
         primaryStage.setMinHeight(600);
 

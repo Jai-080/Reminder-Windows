@@ -71,6 +71,7 @@ Write-Host "Generating MSI installer..." -ForegroundColor Cyan
   --main-jar "ReminderWindows-1.0-SNAPSHOT.jar" `
   --main-class com.reminder.desktop.Launcher `
   --name "Reminder" `
+  --icon "src\main\resources\ic_launcher.ico" `
   --app-version "1.2.0" `
   --vendor "Jai" `
   --win-menu `

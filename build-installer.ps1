@@ -79,4 +79,20 @@ Write-Host "Generating MSI installer..." -ForegroundColor Cyan
   --win-dir-chooser `
   --win-per-user-install
 
-Write-Host "Build completed successfully! Installer generated in target/installer/." -ForegroundColor Green
+Write-Host "Generating EXE installer..." -ForegroundColor Cyan
+& $jpackagePath `
+  --type exe `
+  --dest "$installerDest" `
+  --input "target\libs" `
+  --main-jar "ReminderWindows-1.0-SNAPSHOT.jar" `
+  --main-class com.reminder.desktop.Launcher `
+  --name "Reminder" `
+  --icon "src\main\resources\ic_launcher.ico" `
+  --app-version "1.2.0" `
+  --vendor "Jai" `
+  --win-menu `
+  --win-shortcut `
+  --win-dir-chooser `
+  --win-per-user-install
+
+Write-Host "Build completed successfully! Installers generated in target/installer/." -ForegroundColor Green

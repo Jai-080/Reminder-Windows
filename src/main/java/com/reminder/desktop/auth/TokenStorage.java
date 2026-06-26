@@ -128,6 +128,6 @@ public class TokenStorage {
     }
 
     public static synchronized String getServerUrl() {
-        return properties.getProperty("serverUrl", getCleanDefaultUrl());
+        return getCleanDefaultUrl();
     }
 }

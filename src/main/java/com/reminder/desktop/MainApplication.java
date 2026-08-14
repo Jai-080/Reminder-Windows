@@ -45,6 +45,18 @@ public class MainApplication extends Application {
         this.primaryStage = stage;
         javafx.application.Platform.setImplicitExit(false);
 
+        // Detect if launched automatically by Windows startup
+        boolean startHidden = getParameters().getRaw().contains("--startup");
+
+        // Auto-update startup path if startup registration exists (handles app updates)
+        if (WindowsStartupManager.isStartupEnabled()) {
+            try {
+                WindowsStartupManager.enableStartup();
+            } catch (Exception e) {
+                System.err.println("Failed to auto-update startup entry path: " + e.getMessage());
+            }
+        }
+
         // Initialize Tray Icon immediately on startup
         com.reminder.desktop.notifications.TrayManager.getInstance();
 
@@ -69,7 +81,10 @@ public class MainApplication extends Application {
             primaryStage.hide();
         });
 
-        primaryStage.show();
+        // Show window only if NOT launched from Windows startup
+        if (!startHidden) {
+            primaryStage.show();
+        }
     }
 
     public void showAndFocus() {

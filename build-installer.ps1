@@ -67,6 +67,8 @@ Write-Host "Generating MSI installer..." -ForegroundColor Cyan
 & $jpackagePath `
   --type msi `
   --dest "$installerDest" `
+  --temp "target/wix-temp" `
+  --resource-dir "wix-resources" `
   --input "target\libs" `
   --main-jar "ReminderWindows-1.0-SNAPSHOT.jar" `
   --main-class com.reminder.desktop.Launcher `

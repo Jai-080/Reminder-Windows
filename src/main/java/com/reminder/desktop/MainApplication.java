@@ -48,13 +48,15 @@ public class MainApplication extends Application {
         // Detect if launched automatically by Windows startup
         boolean startHidden = getParameters().getRaw().contains("--startup");
 
-        // Auto-update startup path if startup registration exists (handles app updates)
-        if (WindowsStartupManager.isStartupEnabled()) {
-            try {
-                WindowsStartupManager.enableStartup();
-            } catch (Exception e) {
-                System.err.println("Failed to auto-update startup entry path: " + e.getMessage());
+        // Clean up legacy VBScript startup shortcut from previous app versions
+        try {
+            java.io.File legacyVbs = WindowsStartupManager.getLegacyStartupVbsFile();
+            if (legacyVbs != null && legacyVbs.exists()) {
+                legacyVbs.delete();
+                System.out.println("Cleaned up legacy VBScript startup file.");
             }
+        } catch (Exception e) {
+            System.err.println("Failed to clean up legacy VBScript startup file: " + e.getMessage());
         }
 
         // Initialize Tray Icon immediately on startup

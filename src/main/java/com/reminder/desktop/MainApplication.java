@@ -43,6 +43,11 @@ public class MainApplication extends Application {
     public void start(Stage stage) {
         instance = this;
         this.primaryStage = stage;
+        javafx.application.Platform.setImplicitExit(false);
+
+        // Initialize Tray Icon immediately on startup
+        com.reminder.desktop.notifications.TrayManager.getInstance();
+
         primaryStage.setTitle("Reminder Desktop");
         try {
             primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/ic_launcher.png")));
@@ -59,7 +64,32 @@ public class MainApplication extends Application {
             showLogin();
         }
         
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            primaryStage.hide();
+        });
+
         primaryStage.show();
+    }
+
+    public void showAndFocus() {
+        if (primaryStage != null) {
+            boolean maximized = primaryStage.isMaximized();
+            if (primaryStage.isIconified()) {
+                primaryStage.setIconified(false);
+            }
+            primaryStage.show();
+            primaryStage.setMaximized(maximized);
+            primaryStage.toFront();
+            primaryStage.requestFocus();
+        }
+    }
+
+    public void exitApplication() {
+        javafx.application.Platform.runLater(() -> {
+            com.reminder.desktop.notifications.TrayManager.getInstance().shutdown();
+            javafx.application.Platform.exit();
+        });
     }
 
     public void showLogin() {
@@ -103,10 +133,23 @@ public class MainApplication extends Application {
         com.reminder.desktop.sync.WebSocketManager.getInstance().disconnect();
         com.reminder.desktop.sync.SyncService.getInstance().stopPeriodicSync();
         ReminderScheduler.getInstance().cancelAll();
+        
+        // Release SingleInstanceManager resources
+        SingleInstanceManager.shutdown();
+        
+        // Remove system tray icon
+        com.reminder.desktop.notifications.TrayManager.getInstance().shutdown();
+        
         System.out.println("Reminder Desktop application stopped successfully.");
+        
+        // Force JVM termination to clear any AWT/other non-daemon threads
+        System.exit(0);
     }
 
     public static void main(String[] args) {
+        if (!SingleInstanceManager.checkAndRegister()) {
+            System.exit(0);
+        }
         launch(args);
     }
 }

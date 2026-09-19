@@ -30,7 +30,7 @@ public class Sidebar extends VBox {
 
         // Header Title
         Label appName = new Label("Reminder");
-        appName.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
+        appName.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -color-accent;");
         Label appSub = new Label(" ");
         appSub.getStyleClass().add("subtitle-label");
         VBox header = new VBox(2, appName, appSub);

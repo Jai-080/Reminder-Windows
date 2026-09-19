@@ -30,7 +30,7 @@ public class PaymentView extends ScrollPane {
 
         // Header Title
         Label title = new Label("Payments");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        title.getStyleClass().add("title-label");
         Label subtitle = new Label("Track your expenses. Triggers foreground alerts on due dates.");
         subtitle.getStyleClass().add("subtitle-label");
         VBox headerBox = new VBox(4, title, subtitle);
@@ -41,8 +41,7 @@ public class PaymentView extends ScrollPane {
         formCard.setPadding(new Insets(16));
 
         Label formTitle = new Label("Add Payment");
-        formTitle.getStyleClass().add("section-header");
-        formTitle.setStyle("-fx-font-size: 14px;");
+        formTitle.getStyleClass().add("text-body");
 
         HBox inputsRow = new HBox(12);
         inputsRow.setAlignment(Pos.CENTER_LEFT);
@@ -79,8 +78,7 @@ public class PaymentView extends ScrollPane {
 
         // List Header
         Label listTitle = new Label("Payments List");
-        listTitle.getStyleClass().add("section-header");
-        listTitle.setStyle("-fx-font-size: 16px;");
+        listTitle.getStyleClass().add("text-title-sm");
 
         listContainer = new VBox(12);
         listContainer.setAlignment(Pos.TOP_LEFT);
@@ -128,9 +126,8 @@ public class PaymentView extends ScrollPane {
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(24));
             
-            Label iconLbl = new Label("");
-            iconLbl.getStyleClass().add("empty-state-icon");
-            
+            javafx.scene.shape.SVGPath iconLbl = UIUtils.walletIcon();
+
             Label titleLbl = new Label("No payments yet");
             titleLbl.getStyleClass().add("empty-state-title");
             
@@ -241,6 +238,7 @@ public class PaymentView extends ScrollPane {
         Label dateLbl = new Label();
         dateLbl.getStyleClass().add("subtitle-label");
 
+        boolean overdue = false;
         if (sectionType == 1) {
             if (payment.getRecurrence() == RecurrenceType.ONE_TIME) {
                 dateLbl.setText("✓ Paid  |  Due: " + dateFormat.format(new Date(payment.getDueDate())));
@@ -249,8 +247,9 @@ public class PaymentView extends ScrollPane {
             }
         } else {
             if (payment.getDueDate() < now) {
+                overdue = true;
                 dateLbl.setText("Due Date: " + dateFormat.format(new Date(payment.getDueDate())) + " [Overdue]");
-                dateLbl.setStyle("-fx-text-fill: -color-danger; -fx-font-weight: bold;");
+                dateLbl.setStyle("-fx-text-fill: -color-warning; -fx-font-weight: bold;");
             } else {
                 dateLbl.setText("Due Date: " + dateFormat.format(new Date(payment.getDueDate())));
             }
@@ -265,14 +264,18 @@ public class PaymentView extends ScrollPane {
         delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
         delBtn.setOnAction(e -> controller.deletePayment(payment, this));
 
-        HBox controls;
+        HBox controls = new HBox(12);
+        if (overdue) {
+            Label overdueLbl = new Label("Overdue");
+            overdueLbl.getStyleClass().addAll("badge-pill", "badge-warning");
+            controls.getChildren().add(overdueLbl);
+        }
         if ("PENDING".equalsIgnoreCase(payment.getSyncStatus())) {
             Label syncLbl = new Label("Pending");
             syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
-            controls = new HBox(12, syncLbl, delBtn);
-        } else {
-            controls = new HBox(12, delBtn);
+            controls.getChildren().add(syncLbl);
         }
+        controls.getChildren().add(delBtn);
         controls.setAlignment(Pos.CENTER_RIGHT);
 
         if (sectionType == 2) {

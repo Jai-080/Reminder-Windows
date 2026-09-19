@@ -53,7 +53,7 @@ public class TrayManager {
                 BufferedImage fallbackImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2d = fallbackImage.createGraphics();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color(127, 119, 221)); // Accent purple #7F77DD
+                g2d.setColor(new Color(101, 84, 230)); // Accent purple #6554E6
                 g2d.fillRoundRect(2, 2, 12, 12, 4, 4);
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(new Font("Arial", Font.BOLD, 10));

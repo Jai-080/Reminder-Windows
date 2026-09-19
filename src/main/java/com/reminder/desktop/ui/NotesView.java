@@ -30,7 +30,7 @@ public class NotesView extends ScrollPane {
 
         // Header
         Label title = new Label("Quick Notes");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        title.getStyleClass().add("title-label");
         Label subtitle = new Label("Write down quick tasks. Drag-and-drop position order mirrors Android checklist.");
         subtitle.getStyleClass().add("subtitle-label");
         VBox headerBox = new VBox(4, title, subtitle);
@@ -98,9 +98,8 @@ public class NotesView extends ScrollPane {
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(24));
             
-            Label iconLbl = new Label("");
-            iconLbl.getStyleClass().add("empty-state-icon");
-            
+            javafx.scene.shape.SVGPath iconLbl = UIUtils.checklistIcon();
+
             Label titleLbl = new Label("No quick notes yet");
             titleLbl.getStyleClass().add("empty-state-title");
             

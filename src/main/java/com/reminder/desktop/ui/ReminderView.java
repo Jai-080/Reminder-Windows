@@ -37,7 +37,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Header Title
         Label title = new Label("Timed Reminders");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        title.getStyleClass().add("title-label");
         Label subtitle = new Label("Configure exact notifications. Supports snoozing actions.");
         subtitle.getStyleClass().add("subtitle-label");
         VBox headerBox = new VBox(4, title, subtitle);
@@ -48,8 +48,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         formCard.setPadding(new Insets(16));
 
         Label formTitle = new Label("Schedule New Reminder");
-        formTitle.getStyleClass().add("section-header");
-        formTitle.setStyle("-fx-font-size: 14px;");
+        formTitle.getStyleClass().add("text-body");
 
         HBox inputsRow = new HBox(12);
         inputsRow.setAlignment(Pos.CENTER_LEFT);
@@ -85,8 +84,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         // Pending Section
         VBox pendingBox = new VBox(12);
         Label pendingTitle = new Label("Active Reminders");
-        pendingTitle.getStyleClass().add("section-header");
-        pendingTitle.setStyle("-fx-font-size: 16px;");
+        pendingTitle.getStyleClass().add("text-title-sm");
         pendingContainer = new VBox(10);
         pendingBox.getChildren().addAll(pendingTitle, pendingContainer);
         grid.add(pendingBox, 0, 0);
@@ -94,8 +92,7 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         // Expired Section
         VBox expiredBox = new VBox(12);
         Label expiredTitle = new Label("Fired & Expired");
-        expiredTitle.getStyleClass().add("section-header");
-        expiredTitle.setStyle("-fx-font-size: 16px;");
+        expiredTitle.getStyleClass().add("text-title-sm");
         expiredContainer = new VBox(10);
         expiredBox.getChildren().addAll(expiredTitle, expiredContainer);
         grid.add(expiredBox, 1, 0);
@@ -148,9 +145,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(16));
             
-            Label iconLbl = new Label("");
-            iconLbl.getStyleClass().add("empty-state-icon");
-            
+            javafx.scene.shape.SVGPath iconLbl = UIUtils.bellIcon();
+
             Label titleLbl = new Label("No active reminders");
             titleLbl.getStyleClass().add("empty-state-title");
             
@@ -172,9 +168,8 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(16));
             
-            Label iconLbl = new Label("");
-            iconLbl.getStyleClass().add("empty-state-icon");
-            
+            javafx.scene.shape.SVGPath iconLbl = UIUtils.bellIcon();
+
             Label titleLbl = new Label("No expired history");
             titleLbl.getStyleClass().add("empty-state-title");
             
@@ -208,35 +203,40 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Sync Badge
-        if ("PENDING".equalsIgnoreCase(reminder.getSyncStatus())) {
+        // Sync / status badges
+        boolean pendingSync = "PENDING".equalsIgnoreCase(reminder.getSyncStatus());
+        if (pendingSync) {
             Label syncLbl = new Label("Pending");
             syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
-            footer.getChildren().addAll(syncLbl, spacer);
-        } else {
-            footer.getChildren().addAll(spacer);
+            footer.getChildren().add(syncLbl);
         }
+        if (!isPending) {
+            Label expiredLbl = new Label("Expired");
+            expiredLbl.getStyleClass().addAll("badge-pill", "badge-warning");
+            footer.getChildren().add(expiredLbl);
+        }
+        footer.getChildren().add(spacer);
 
         if (isPending) {
             Button rescheduleBtn = new Button("Reschedule");
-            rescheduleBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
+            rescheduleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
             rescheduleBtn.setOnAction(e -> triggerEditDialog(reminder));
 
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
+            delBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
             delBtn.setOnAction(e -> controller.deleteReminder(reminder, this));
 
             footer.getChildren().addAll(rescheduleBtn, delBtn);
         } else {
             // Expired card controls
             Button rescheduleBtn = new Button("Reschedule");
-            rescheduleBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
+            rescheduleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
             rescheduleBtn.setOnAction(e -> triggerEditDialog(reminder));
 
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-font-size: 10px; -fx-padding: 4 6;");
+            delBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
             delBtn.setOnAction(e -> controller.deleteReminder(reminder, this));
 
             footer.getChildren().addAll(rescheduleBtn, delBtn);

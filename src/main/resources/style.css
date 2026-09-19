@@ -1,65 +1,127 @@
-/* Windows 11 Fluent and Material-Inspired Design System for JavaFX */
+/* Reminder Design System — tokens rebuilt from the shipped style.css for WCAG AA
+   contrast and one consolidated type/elevation scale. See the project's design
+   system (tokens.json) for the source values and usage notes behind each one. */
 
 .root {
-    /* Color Palette - Default Light Mode */
+    /* Color Palette - Light (default) */
     -color-bg: #FAFAFC;
     -color-surface: #FFFFFF;
     -color-sidebar-bg: #F4F1FF;
-    -color-text: #1D1B20;
-    -color-text-secondary: #49454F;
-    -color-accent: #7B6FEA;
-    -color-accent-hover: #6558E2;
-    -color-accent-light: #F4F1FF;
+    -color-input-bg: #FFFFFF;
     -color-border: #E8E6F5;
     -color-card-bg: #FFFFFF;
-    -color-input-bg: #FFFFFF;
-    -color-danger: #C4684D;
-    -color-danger-hover: #FCEBE8;
-    -color-success: #12B886;
+
+    -color-text: #1D1B20;
+    -color-text-secondary: #49454F;
+    -color-hint: #928FA1;
+    -color-on-accent: #FFFFFF;
+
+    -color-accent: #6554E6;
+    -color-accent-hover: #5245D9;
+    -color-accent-light: #F4F1FF;
+
+    -color-success: #0D805D;
     -color-success-hover: #E6FCF5;
-    -color-header-purple: #7C73E6;
-    -color-hint: #9A97A8;
-    -color-expired: #C65A28;
-    
+
+    -color-danger: #BA5A3E;
+    -color-danger-hover: #FCEBE8;
+
+    -color-warning: #BE5626;
+    -color-warning-hover: #FCECE1;
+
+    -color-offline: #D02A64;
+    -color-offline-hover: #FFF0F6;
+
+    -color-scrollbar-thumb: #CED4DA;
+    -color-scrollbar-thumb-hover: #ADB5BD;
+    -color-toggle-track-off: #E2E8F0;
+
     -fx-font-family: "Segoe UI", "Inter", -fx-system;
     -fx-font-size: 13px;
     -fx-background-color: -color-bg;
 }
 
-/* Dark Mode Variable Overrides */
+/* Color Palette - Dark */
 .root.dark {
     -color-bg: #111113;
     -color-surface: #1B1B21;
     -color-sidebar-bg: #2A2831;
-    -color-text: #FFFFFF;
-    -color-text-secondary: #C6C2D3;
-    -color-accent: #8B7DFF;
-    -color-accent-hover: #A396FF;
-    -color-accent-light: #252233;
+    -color-input-bg: #1F1F1F;
     -color-border: #343240;
     -color-card-bg: #1B1B21;
-    -color-input-bg: #1F1F1F;
-    -color-danger: #C4684D;
-    -color-danger-hover: #40221A;
+
+    -color-text: #FFFFFF;
+    -color-text-secondary: #C6C2D3;
+    -color-hint: #75717F;
+
+    -color-accent: #9487FF;
+    -color-accent-hover: #A396FF;
+    -color-accent-light: #252233;
+
     -color-success: #20C997;
     -color-success-hover: #1A3E34;
-    -color-header-purple: #9D8EFF;
-    -color-hint: #75717F;
-    -color-expired: #C65A28;
+
+    -color-danger: #C56B51;
+    -color-danger-hover: #40221A;
+
+    -color-warning: #D5632E;
+    -color-warning-hover: #402A1A;
+
+    -color-offline: #FAA2C1;
+    -color-offline-hover: #3B1B2A;
+
+    -color-scrollbar-thumb: #495057;
+    -color-scrollbar-thumb-hover: #6C757D;
+    -color-toggle-track-off: #2D3035;
 }
 
 /* Typography & Labels */
 .label {
     -fx-text-fill: -color-text;
 }
+
+/* Consolidated type scale (replaces the source's 11/12/14/15px "section header"
+   and 18/22/24px "page title" treatments with one named style per role). */
 .title-label {
+    /* h2 — page titles: Quick Notes, Timed Reminders, Payments, Sign In / Create Account */
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-text;
 }
 .subtitle-label {
+    /* body-sm — secondary copy, matches the app's 13px base */
     -fx-font-size: 13px;
     -fx-text-fill: -color-text-secondary;
+}
+.text-h1 {
+    /* h1 — the Dashboard greeting title */
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text;
+}
+.text-title-sm {
+    /* title-sm — list-section titles: Active Reminders, Fired & Expired, Payments List */
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text;
+}
+.text-label-lg, .empty-state-title {
+    /* label-lg — card-level headings: empty-state title, Recent Checklist, Upcoming Agenda */
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text;
+}
+.text-body {
+    /* body — form-section titles: Schedule New Reminder, Add Payment */
+    -fx-font-size: 14px;
+    -fx-font-weight: normal;
+    -fx-text-fill: -color-text;
+}
+.text-eyebrow {
+    /* eyebrow — QUICK NOTES / REMINDERS / PAYMENTS card labels, agenda sub-heads */
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-accent;
 }
 
 /* Text Fields & Password Fields */
@@ -134,7 +196,7 @@
     -fx-background-color: -color-accent;
     -fx-background-radius: 6px;
     -fx-border-width: 0px;
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -color-on-accent;
     -fx-font-weight: bold;
     -fx-padding: 9px 18px;
     -fx-cursor: hand;
@@ -144,15 +206,6 @@
 }
 .button-accent:pressed {
     -fx-background-color: -color-accent;
-}
-.root.dark .button-accent {
-    -fx-background-color: linear-gradient(to right, #7E72F5, #9B86FF);
-}
-.root.dark .button-accent:hover {
-    -fx-background-color: linear-gradient(to right, #9B86FF, #7E72F5);
-}
-.root.dark .button-accent:pressed {
-    -fx-background-color: linear-gradient(to right, #7E72F5, #9B86FF);
 }
 
 /* Danger Buttons */
@@ -169,12 +222,6 @@
     -fx-background-color: -color-danger-hover;
 }
 
-/* Section Header */
-.section-header {
-    -fx-text-fill: -color-header-purple;
-    -fx-font-weight: bold;
-}
-
 /* Cards */
 .card {
     -fx-background-color: -color-card-bg;
@@ -187,7 +234,7 @@
 }
 .card:hover {
     -fx-border-color: -color-accent;
-    -fx-effect: dropshadow(three-pass-box, rgba(123, 111, 234, 0.1), 12, 0, 0, 6);
+    -fx-effect: dropshadow(three-pass-box, rgba(101, 84, 230, 0.10), 12, 0, 0, 6);
 }
 .root.dark .card {
     -fx-effect: none;
@@ -240,17 +287,11 @@
     -fx-padding: 2px;
 }
 .scroll-pane .scroll-bar .thumb {
-    -fx-background-color: #CED4DA;
+    -fx-background-color: -color-scrollbar-thumb;
     -fx-background-radius: 6px;
 }
 .scroll-pane .scroll-bar .thumb:hover {
-    -fx-background-color: #ADB5BD;
-}
-.root.dark .scroll-pane .scroll-bar .thumb {
-    -fx-background-color: #495057;
-}
-.root.dark .scroll-pane .scroll-bar .thumb:hover {
-    -fx-background-color: #6C757D;
+    -fx-background-color: -color-scrollbar-thumb-hover;
 }
 .scroll-pane .scroll-bar .track {
     -fx-background-color: transparent;
@@ -278,7 +319,7 @@
     -fx-border-color: -color-accent;
 }
 .check-box:selected .mark {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -color-on-accent;
 }
 
 /* DatePicker Styling */
@@ -359,15 +400,19 @@
     -fx-border-style: dashed;
     -fx-border-width: 1.5px;
 }
-.empty-state-icon {
-    -fx-font-size: 32px;
-    -fx-text-fill: -color-text-secondary;
+/* The empty-state icon slot: an SVGPath line icon (see UIUtils.checklistIcon/bellIcon/walletIcon) */
+.empty-state-icon-shape {
+    -fx-stroke: -color-text-secondary;
+    -fx-fill: transparent;
+    -fx-stroke-width: 1.6px;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
     -fx-opacity: 0.6;
+    -fx-scale-x: 1.3;
+    -fx-scale-y: 1.3;
 }
+/* .empty-state-title moved up to the consolidated type scale (.text-label-lg) */
 .empty-state-title {
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -color-text;
     -fx-padding: 8 0 4 0;
 }
 .empty-state-desc {
@@ -376,12 +421,12 @@
     -fx-alignment: center;
 }
 
-/* Badge Styling */
+/* Badge Styling — always a soft tint fill with matching saturated text, never solid */
 .badge-pill {
     -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-padding: 3px 8px;
-    -fx-background-radius: 12px;
+    -fx-background-radius: 999px;
 }
 .badge-pending {
     -fx-background-color: -color-accent-light;
@@ -392,20 +437,20 @@
     -fx-text-fill: -color-success;
 }
 .badge-online {
-    -fx-background-color: #E6FCF5;
-    -fx-text-fill: #0CA678;
-}
-.root.dark .badge-online {
-    -fx-background-color: #12372A;
-    -fx-text-fill: #38D9A9;
+    -fx-background-color: -color-success-hover;
+    -fx-text-fill: -color-success;
 }
 .badge-offline {
-    -fx-background-color: #FFF0F6;
-    -fx-text-fill: #D6336C;
+    -fx-background-color: -color-offline-hover;
+    -fx-text-fill: -color-offline;
 }
-.root.dark .badge-offline {
-    -fx-background-color: #3B1B2A;
-    -fx-text-fill: #FAA2C1;
+.badge-warning {
+    -fx-background-color: -color-warning-hover;
+    -fx-text-fill: -color-warning;
+}
+.badge-neutral {
+    -fx-background-color: -color-border;
+    -fx-text-fill: -color-text-secondary;
 }
 
 /* Table and List Rows Style */
@@ -419,12 +464,6 @@
 }
 .row-card-item:hover {
     -fx-background-color: -color-bg;
-}
-
-/* Neutral Badge */
-.badge-neutral {
-    -fx-background-color: -color-border;
-    -fx-text-fill: -color-text-secondary;
 }
 
 /* Combo Box Customization */
@@ -482,7 +521,7 @@
 }
 .combo-box-popup > .list-view .list-cell:filled:selected {
     -fx-background-color: -color-accent;
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -color-on-accent;
 }
 
 /* Spinner Customization */
@@ -512,6 +551,21 @@
 .spinner > .increment-arrow-button > .increment-arrow,
 .spinner > .decrement-arrow-button > .decrement-arrow {
     -fx-background-color: -color-text-secondary;
+}
+
+/* Time Picker — wraps two Spinners in one shared bg-input/border/radius-sm box,
+   matching the TextField component's "one shared box model" rule. */
+.time-picker-box {
+    -fx-background-color: -color-input-bg;
+    -fx-background-radius: 6px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+    -fx-padding: 0 2px;
+}
+.time-picker-box > .spinner {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
 }
 
 /* Date Picker Popup Customization */
@@ -569,7 +623,7 @@
 .date-picker-popup .date-cell.selected,
 .date-picker-popup .selected {
     -fx-background-color: -color-accent;
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -color-on-accent;
 }
 .date-picker-popup .today {
     -fx-border-color: -color-accent;
@@ -584,7 +638,7 @@
 
 /* Custom Toggle Switch styling */
 .toggle-switch-track {
-    -fx-background-color: #E2E8F0;
+    -fx-background-color: -color-toggle-track-off;
     -fx-background-radius: 11;
     -fx-border-radius: 11;
     -fx-pref-width: 42px;
@@ -597,14 +651,11 @@
     -fx-padding: 2px;
     -fx-cursor: hand;
 }
-.root.dark .toggle-switch-track {
-    -fx-background-color: #2D3035;
-}
 .toggle-switch-track.active {
     -fx-background-color: -color-accent;
 }
 .toggle-switch-thumb {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: -color-on-accent;
     -fx-background-radius: 9;
     -fx-border-radius: 9;
     -fx-pref-width: 18px;

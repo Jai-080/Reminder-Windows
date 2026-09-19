@@ -77,7 +77,7 @@ public class DashboardView extends ScrollPane {
         // Left Side: Title and Welcome
         String username = TokenStorage.getUsername();
         Label welcomeTitle = new Label("Dashboard");
-        welcomeTitle.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: -color-text;");
+        welcomeTitle.getStyleClass().add("text-h1");
         Label welcomeSubtitle = new Label("Welcome back, " + (username != null ? username : "User") + "! Here's your agenda.");
         welcomeSubtitle.getStyleClass().add("subtitle-label");
         VBox welcomeBox = new VBox(4, welcomeTitle, welcomeSubtitle);
@@ -168,20 +168,17 @@ public class DashboardView extends ScrollPane {
         agendaSection.getStyleClass().add("card");
         
         Label agendaTitle = new Label("Upcoming Agenda");
-        agendaTitle.getStyleClass().add("section-header");
-        agendaTitle.setStyle("-fx-font-size: 15px;");
+        agendaTitle.getStyleClass().add("text-label-lg");
 
         VBox remindersSubBox = new VBox(8);
-        Label remTitle = new Label("Reminders");
-        remTitle.getStyleClass().add("section-header");
-        remTitle.setStyle("-fx-font-size: 12px;");
+        Label remTitle = new Label("REMINDERS");
+        remTitle.getStyleClass().add("text-eyebrow");
         remindersContainer = new VBox(6);
         remindersSubBox.getChildren().addAll(remTitle, remindersContainer);
 
         VBox paymentsSubBox = new VBox(8);
-        Label payTitle = new Label("Payments");
-        payTitle.getStyleClass().add("section-header");
-        payTitle.setStyle("-fx-font-size: 12px;");
+        Label payTitle = new Label("PAYMENTS");
+        payTitle.getStyleClass().add("text-eyebrow");
         paymentsContainer = new VBox(6);
         paymentsSubBox.getChildren().addAll(payTitle, paymentsContainer);
 
@@ -230,8 +227,7 @@ public class DashboardView extends ScrollPane {
         card.setOnMouseClicked(e -> parentLayout.showView(viewName));
 
         Label titleLbl = new Label(title);
-        titleLbl.getStyleClass().add("section-header");
-        titleLbl.setStyle("-fx-font-size: 11px;");
+        titleLbl.getStyleClass().add("text-eyebrow");
         card.getChildren().add(titleLbl);
         return card;
     }
@@ -240,8 +236,7 @@ public class DashboardView extends ScrollPane {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         Label titleLbl = new Label(title);
-        titleLbl.getStyleClass().add("section-header");
-        titleLbl.setStyle("-fx-font-size: 15px;");
+        titleLbl.getStyleClass().add("text-label-lg");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
@@ -365,8 +360,7 @@ public class DashboardView extends ScrollPane {
                         VBox emptyBox = new VBox(6);
                         emptyBox.setAlignment(Pos.CENTER);
                         emptyBox.setPadding(new Insets(12));
-                        Label icon = new Label("");
-                        icon.setStyle("-fx-font-size: 20px; -fx-opacity: 0.5;");
+                        javafx.scene.shape.SVGPath icon = UIUtils.checklistIcon();
                         Label emptyLbl = new Label("Checklist empty");
                         emptyLbl.getStyleClass().add("subtitle-label");
                         emptyBox.getChildren().addAll(icon, emptyLbl);

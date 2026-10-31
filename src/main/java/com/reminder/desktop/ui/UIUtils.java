@@ -1,6 +1,7 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.config.ServerConfig;
+import javafx.scene.control.Alert;
 import javafx.scene.control.DatePicker;
 import javafx.scene.shape.SVGPath;
 import javafx.util.StringConverter;
@@ -42,6 +43,18 @@ public class UIUtils {
                 return null;
             }
         });
+    }
+
+    public static void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public static void showErrorAlert(String title, String content) {
+        showAlert(Alert.AlertType.WARNING, title, content);
     }
 
     /** Fills the empty-state icon slot the source left blank: a checklist glyph for Notes. */

@@ -2,15 +2,19 @@ package com.reminder.desktop.ui;
 
 import com.reminder.desktop.models.MonthlyPayment;
 import com.reminder.desktop.models.RecurrenceType;
-import java.time.LocalDate;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class PaymentView extends ScrollPane {
     private final PaymentController controller;
@@ -19,7 +23,7 @@ public class PaymentView extends ScrollPane {
 
     public PaymentView() {
         this.controller = new PaymentController();
-        this.dateFormat = new SimpleDateFormat("dd MMM yyyy", java.util.Locale.ENGLISH);
+        this.dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
 
         this.setFitToWidth(true);
         this.setPannable(true);
@@ -52,7 +56,7 @@ public class PaymentView extends ScrollPane {
 
         TextField amountInput = new TextField();
         amountInput.setPromptText("Amount");
-        amountInput.setPrefWidth(120);
+        amountInput.setPrefWidth(100);
         amountInput.setTextFormatter(new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
             if (newText.isEmpty() || newText.matches("\\d*\\.?\\d*")) {
@@ -62,18 +66,39 @@ public class PaymentView extends ScrollPane {
         }));
 
         ComboBox<String> recurrenceCombo = new ComboBox<>();
-        recurrenceCombo.getItems().addAll("One-Time", "Monthly", "Quarterly", "Yearly");
+        recurrenceCombo.getItems().addAll("One-Time", "Monthly", "Bi-monthly", "Quarterly", "Half-yearly", "Yearly", "Custom");
         recurrenceCombo.setValue("Monthly");
         recurrenceCombo.setPrefWidth(120);
 
+        HBox customDaysBox = new HBox(6);
+        customDaysBox.setAlignment(Pos.CENTER_LEFT);
+        TextField customDaysInput = new TextField("28");
+        customDaysInput.setPrefWidth(55);
+        customDaysInput.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.isEmpty() || newText.matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+        customDaysBox.getChildren().addAll(new Label("Every:"), customDaysInput, new Label("days"));
+        customDaysBox.setVisible(false);
+        customDaysBox.setManaged(false);
+
+        recurrenceCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isCustom = "Custom".equalsIgnoreCase(newVal);
+            customDaysBox.setVisible(isCustom);
+            customDaysBox.setManaged(isCustom);
+        });
+
         DatePicker dueDatePicker = new DatePicker(LocalDate.now());
-        dueDatePicker.setPrefWidth(150);
+        dueDatePicker.setPrefWidth(140);
         UIUtils.configureDatePicker(dueDatePicker);
 
         Button addBtn = new Button("Add");
         addBtn.getStyleClass().add("button-accent");
 
-        inputsRow.getChildren().addAll(nameInput, amountInput, recurrenceCombo, new Label("Due:"), dueDatePicker, addBtn);
+        inputsRow.getChildren().addAll(nameInput, amountInput, recurrenceCombo, customDaysBox, new Label("Due:"), dueDatePicker, addBtn);
         formCard.getChildren().addAll(formTitle, inputsRow);
 
         // List Header
@@ -88,10 +113,44 @@ public class PaymentView extends ScrollPane {
 
         // Event Trigger
         addBtn.setOnAction(e -> {
-            controller.addPayment(nameInput.getText(), dueDatePicker.getValue(), amountInput.getText(), recurrenceCombo.getValue(), this);
+            String name = nameInput.getText();
+            if (name == null || name.trim().isEmpty()) {
+                UIUtils.showErrorAlert("Validation Error", "Please enter a payment name.");
+                return;
+            }
+
+            LocalDate dueDate = dueDatePicker.getValue();
+            if (dueDate == null) {
+                UIUtils.showErrorAlert("Validation Error", "Please select a due date.");
+                return;
+            }
+
+            String recVal = recurrenceCombo.getValue();
+            Integer customInterval = null;
+            if ("Custom".equalsIgnoreCase(recVal)) {
+                String intervalStr = customDaysInput.getText() != null ? customDaysInput.getText().trim() : "";
+                if (intervalStr.isEmpty()) {
+                    UIUtils.showErrorAlert("Validation Error", "Please enter a recurrence interval in days.");
+                    return;
+                }
+                try {
+                    int days = Integer.parseInt(intervalStr);
+                    if (days < 1 || days > 365) {
+                        UIUtils.showErrorAlert("Validation Error", "Custom recurrence interval must be between 1 and 365 days.");
+                        return;
+                    }
+                    customInterval = days;
+                } catch (NumberFormatException ex) {
+                    UIUtils.showErrorAlert("Validation Error", "Custom recurrence interval must be a valid whole number between 1 and 365.");
+                    return;
+                }
+            }
+
+            controller.addPayment(name.trim(), dueDate, amountInput.getText(), recVal, customInterval, this);
             nameInput.clear();
             amountInput.clear();
             recurrenceCombo.setValue("Monthly");
+            customDaysInput.setText("28");
         });
 
         // Initial Load
@@ -125,15 +184,15 @@ public class PaymentView extends ScrollPane {
             emptyBox.getStyleClass().add("empty-state-box");
             emptyBox.setAlignment(Pos.CENTER);
             emptyBox.setPadding(new Insets(24));
-            
+
             javafx.scene.shape.SVGPath iconLbl = UIUtils.walletIcon();
 
             Label titleLbl = new Label("No payments yet");
             titleLbl.getStyleClass().add("empty-state-title");
-            
+
             Label descLbl = new Label("Set up expenses and due dates above.");
             descLbl.getStyleClass().add("empty-state-desc");
-            
+
             emptyBox.getChildren().addAll(iconLbl, titleLbl, descLbl);
             listContainer.getChildren().add(emptyBox);
             return;
@@ -144,9 +203,9 @@ public class PaymentView extends ScrollPane {
         List<MonthlyPayment> recentlyPaidList = new java.util.ArrayList<>();
         List<MonthlyPayment> dueLaterList = new java.util.ArrayList<>();
 
-        java.util.Calendar nowCal = java.util.Calendar.getInstance();
-        int currentMonth = nowCal.get(java.util.Calendar.MONTH) + 1;
-        int currentYear = nowCal.get(java.util.Calendar.YEAR);
+        Calendar nowCal = Calendar.getInstance();
+        int currentMonth = nowCal.get(Calendar.MONTH) + 1;
+        int currentYear = nowCal.get(Calendar.YEAR);
 
         for (MonthlyPayment payment : payments) {
             if (payment.isRecentlyPaid(currentMonth, currentYear)) {
@@ -160,7 +219,7 @@ public class PaymentView extends ScrollPane {
 
         // Sort lists
         upcomingList.sort((p1, p2) -> Long.compare(p1.getDueDate(), p2.getDueDate()));
-        recentlyPaidList.sort((p1, p2) -> Long.compare(p2.getLastPaidAt(), p1.getLastPaidAt()));
+        recentlyPaidList.sort((p1, p2) -> Long.compare(p2.getLastPaidAt() != null ? p2.getLastPaidAt() : 0L, p1.getLastPaidAt() != null ? p1.getLastPaidAt() : 0L));
         dueLaterList.sort((p1, p2) -> Long.compare(p1.getDueDate(), p2.getDueDate()));
 
         long now = System.currentTimeMillis();
@@ -223,13 +282,22 @@ public class PaymentView extends ScrollPane {
         } else {
             nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
         }
-        
-        String amountText = payment.getAmount() == null ? "Amount Unknown" : String.format("₹%.2f", payment.getAmount());
+
+        String amountText = payment.getAmount() == null ? "Amount Unknown" : String.format(Locale.getDefault(), "₹%.2f", payment.getAmount());
         Label amountLbl = new Label(amountText);
         amountLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: -color-text-secondary;");
 
-        String recurrenceText = payment.getRecurrence() != null ? payment.getRecurrence().name() : "MONTHLY";
-        Label recurrenceBadge = new Label(recurrenceText);
+        String recurrenceDisplay;
+        if (payment.getRecurrence() == RecurrenceType.CUSTOM_DAYS) {
+            int days = payment.getCustomIntervalDays();
+            recurrenceDisplay = "Every " + days + (days == 1 ? " day" : " days");
+        } else if (payment.getRecurrence() != null) {
+            recurrenceDisplay = payment.getRecurrence().name().replace("_", "-");
+        } else {
+            recurrenceDisplay = "MONTHLY";
+        }
+
+        Label recurrenceBadge = new Label(recurrenceDisplay);
         recurrenceBadge.getStyleClass().addAll("badge-pill", "badge-neutral");
 
         HBox amountAndRecurrence = new HBox(8, amountLbl, recurrenceBadge);
@@ -259,6 +327,11 @@ public class PaymentView extends ScrollPane {
         HBox.setHgrow(details, Priority.ALWAYS);
 
         // Controls VBox
+        Button editBtn = new Button("Edit");
+        editBtn.getStyleClass().add("button-secondary");
+        editBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+        editBtn.setOnAction(e -> showEditPaymentDialog(payment));
+
         Button delBtn = new Button("Delete");
         delBtn.getStyleClass().add("button-danger");
         delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
@@ -274,8 +347,12 @@ public class PaymentView extends ScrollPane {
             Label syncLbl = new Label("Pending");
             syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
             controls.getChildren().add(syncLbl);
+        } else if ("LOCAL_ONLY".equalsIgnoreCase(payment.getSyncStatus())) {
+            Label localLbl = new Label("Local Only");
+            localLbl.getStyleClass().addAll("badge-pill", "badge-neutral");
+            controls.getChildren().add(localLbl);
         }
-        controls.getChildren().add(delBtn);
+        controls.getChildren().addAll(editBtn, delBtn);
         controls.setAlignment(Pos.CENTER_RIGHT);
 
         if (sectionType == 2) {
@@ -284,5 +361,174 @@ public class PaymentView extends ScrollPane {
             paymentCard.getChildren().addAll(completeBox, details, controls);
         }
         return paymentCard;
+    }
+
+    private void showEditPaymentDialog(MonthlyPayment payment) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Payment");
+        dialog.setHeaderText("Update payment settings");
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(20));
+
+        TextField editName = new TextField(payment.getName());
+        editName.setPromptText("Payment name");
+
+        TextField editAmount = new TextField(payment.getAmount() != null ? String.valueOf(payment.getAmount()) : "");
+        editAmount.setPromptText("Amount");
+        editAmount.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.isEmpty() || newText.matches("\\d*\\.?\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+
+        LocalDate currentLocalDate = Instant.ofEpochMilli(payment.getDueDate()).atZone(ZoneId.systemDefault()).toLocalDate();
+        DatePicker editDatePicker = new DatePicker(currentLocalDate);
+        UIUtils.configureDatePicker(editDatePicker);
+
+        ComboBox<String> editRecurrence = new ComboBox<>();
+        editRecurrence.getItems().addAll("One-Time", "Monthly", "Bi-monthly", "Quarterly", "Half-yearly", "Yearly", "Custom");
+
+        String initialRec;
+        if (payment.getRecurrence() == RecurrenceType.ONE_TIME) initialRec = "One-Time";
+        else if (payment.getRecurrence() == RecurrenceType.BI_MONTHLY) initialRec = "Bi-monthly";
+        else if (payment.getRecurrence() == RecurrenceType.QUARTERLY) initialRec = "Quarterly";
+        else if (payment.getRecurrence() == RecurrenceType.HALF_YEARLY) initialRec = "Half-yearly";
+        else if (payment.getRecurrence() == RecurrenceType.YEARLY) initialRec = "Yearly";
+        else if (payment.getRecurrence() == RecurrenceType.CUSTOM_DAYS) initialRec = "Custom";
+        else initialRec = "Monthly";
+        editRecurrence.setValue(initialRec);
+
+        HBox editCustomDaysBox = new HBox(6);
+        editCustomDaysBox.setAlignment(Pos.CENTER_LEFT);
+        TextField editCustomDaysInput = new TextField(String.valueOf(payment.getCustomIntervalDays()));
+        editCustomDaysInput.setPrefWidth(60);
+        editCustomDaysInput.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.isEmpty() || newText.matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+        editCustomDaysBox.getChildren().addAll(new Label("Every:"), editCustomDaysInput, new Label("days"));
+        boolean isInitialCustom = "Custom".equalsIgnoreCase(initialRec);
+        editCustomDaysBox.setVisible(isInitialCustom);
+        editCustomDaysBox.setManaged(isInitialCustom);
+
+        editRecurrence.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isCustom = "Custom".equalsIgnoreCase(newVal);
+            editCustomDaysBox.setVisible(isCustom);
+            editCustomDaysBox.setManaged(isCustom);
+        });
+
+        grid.add(new Label("Name:"), 0, 0);
+        grid.add(editName, 1, 0);
+        grid.add(new Label("Amount:"), 0, 1);
+        grid.add(editAmount, 1, 1);
+        grid.add(new Label("Due Date:"), 0, 2);
+        grid.add(editDatePicker, 1, 2);
+        grid.add(new Label("Recurrence:"), 0, 3);
+        grid.add(editRecurrence, 1, 3);
+        grid.add(new Label("Interval:"), 0, 4);
+        grid.add(editCustomDaysBox, 1, 4);
+
+        dialogPane.setContent(grid);
+
+        Button saveButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+        saveButton.setText("Save");
+        saveButton.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            String name = editName.getText();
+            if (name == null || name.trim().isEmpty()) {
+                UIUtils.showErrorAlert("Validation Error", "Payment name cannot be empty.");
+                event.consume();
+                return;
+            }
+
+            if (editDatePicker.getValue() == null) {
+                UIUtils.showErrorAlert("Validation Error", "Please select a due date.");
+                event.consume();
+                return;
+            }
+
+            String recVal = editRecurrence.getValue();
+            if ("Custom".equalsIgnoreCase(recVal)) {
+                String cStr = editCustomDaysInput.getText() != null ? editCustomDaysInput.getText().trim() : "";
+                if (cStr.isEmpty()) {
+                    UIUtils.showErrorAlert("Validation Error", "Please enter a recurrence interval in days.");
+                    event.consume();
+                    return;
+                }
+                try {
+                    int val = Integer.parseInt(cStr);
+                    if (val < 1 || val > 365) {
+                        UIUtils.showErrorAlert("Validation Error", "Recurrence interval must be between 1 and 365 days.");
+                        event.consume();
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    UIUtils.showErrorAlert("Validation Error", "Recurrence interval must be a valid whole number between 1 and 365.");
+                    event.consume();
+                    return;
+                }
+            }
+        });
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                String name = editName.getText().trim();
+                Double amount = null;
+                String amtStr = editAmount.getText().trim();
+                if (!amtStr.isEmpty()) {
+                    try {
+                        amount = Double.parseDouble(amtStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                LocalDate selectedDate = editDatePicker.getValue();
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                cal.set(Calendar.HOUR_OF_DAY, 9);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+
+                String recStr = editRecurrence.getValue();
+                RecurrenceType rec = RecurrenceType.MONTHLY;
+                int interval = 28;
+
+                if ("One-Time".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.ONE_TIME;
+                } else if ("Bi-monthly".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.BI_MONTHLY;
+                } else if ("Quarterly".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.QUARTERLY;
+                } else if ("Half-yearly".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.HALF_YEARLY;
+                } else if ("Yearly".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.YEARLY;
+                } else if ("Custom".equalsIgnoreCase(recStr)) {
+                    rec = RecurrenceType.CUSTOM_DAYS;
+                    try {
+                        interval = Integer.parseInt(editCustomDaysInput.getText().trim());
+                    } catch (Exception ignored) {}
+                }
+
+                payment.setName(name);
+                payment.setAmount(amount);
+                payment.setDueDate(cal.getTimeInMillis());
+                payment.setOriginalDueDay(cal.get(Calendar.DAY_OF_MONTH));
+                payment.setRecurrence(rec);
+                payment.setCustomIntervalDays(interval);
+
+                controller.updatePayment(payment, this);
+            }
+        });
     }
 }

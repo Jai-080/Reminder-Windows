@@ -450,8 +450,12 @@ public class SyncService {
                                 rec = RecurrenceType.valueOf(recStr.toUpperCase());
                             } catch (IllegalArgumentException ignored) {}
                         }
+                        int origDay = localPayment.getOriginalDueDay();
+                        int customInterval = localPayment.getCustomIntervalDays();
                         localPayment.setRecurrence(rec);
                         localPayment.setNotificationOffsets(dto.getNotificationOffsets() != null ? dto.getNotificationOffsets() : "0");
+                        localPayment.setOriginalDueDay(origDay);
+                        localPayment.setCustomIntervalDays(customInterval);
                         
                         localPayment.setUpdatedAt(serverMillis);
                         localPayment.setSyncStatus("SYNCED");
@@ -484,6 +488,14 @@ public class SyncService {
                             offsets
                     );
                     newPayment.setLastPaidAt(dto.getLastPaidAt());
+                    int origDay = 0;
+                    if (newPayment.getDueDate() > 0) {
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTimeInMillis(newPayment.getDueDate());
+                        origDay = cal.get(java.util.Calendar.DAY_OF_MONTH);
+                    }
+                    newPayment.setOriginalDueDay(origDay);
+                    newPayment.setCustomIntervalDays(28);
                     paymentDao.insertPayment(newPayment);
                     if (!newPayment.isRecentlyPaid() && newPayment.getDueDate() >= startOfToday) {
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(newPayment);
@@ -495,6 +507,13 @@ public class SyncService {
         // 2. Push Pending to Server
         List<MonthlyPayment> pendingPayments = paymentDao.getSyncPendingPayments();
         for (MonthlyPayment local : pendingPayments) {
+            if ((local.getRecurrence() != null && local.getRecurrence().isLocalOnly()) || "LOCAL_ONLY".equals(local.getSyncStatus())) {
+                System.out.println("Skipping server push for payment '" + local.getName() + "': RecurrenceType." + local.getRecurrence() + " is stored LOCAL_ONLY.");
+                local.setSyncStatus("LOCAL_ONLY");
+                paymentDao.updatePayment(local);
+                continue;
+            }
+
             MonthlyPaymentDto dto = new MonthlyPaymentDto(
                     local.getServerId(),
                     local.getName(),

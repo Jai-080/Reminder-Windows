@@ -42,3 +42,6 @@ reminder.db
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Phase reports
+/PHASE_*.md

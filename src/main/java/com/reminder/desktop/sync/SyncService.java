@@ -327,7 +327,7 @@ public class SyncService {
                         localReminder.setSyncStatus("SYNCED");
                         reminderDao.updateReminder(localReminder);
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelReminder(localReminder);
-                        if (!localReminder.isExpired() && localReminder.getTime() > System.currentTimeMillis()) {
+                        if (!localReminder.isExpired() && localReminder.getEffectiveTime() > System.currentTimeMillis()) {
                             com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(localReminder);
                         }
                     }
@@ -343,7 +343,7 @@ public class SyncService {
                             "SYNCED"
                     );
                     reminderDao.insertReminder(newReminder);
-                    if (!newReminder.isExpired() && newReminder.getTime() > System.currentTimeMillis()) {
+                    if (!newReminder.isExpired() && newReminder.getEffectiveTime() > System.currentTimeMillis()) {
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(newReminder);
                     }
                 }

@@ -60,7 +60,9 @@ public class ReminderScheduler {
                 List<Reminder> pendingReminders = reminderDao.getPendingReminders();
                 long now = System.currentTimeMillis();
                 for (Reminder r : pendingReminders) {
-                    if (r.getTime() <= now) {
+                    if (r.isExpired()) continue;
+                    long targetTime = r.getEffectiveTime();
+                    if (targetTime <= now) {
                         // Trigger immediately since it was missed while the app was closed
                         triggerReminder(r);
                     } else {
@@ -91,17 +93,19 @@ public class ReminderScheduler {
 
     public void scheduleReminder(Reminder reminder) {
         if (reminder.getId() == null) return;
+        if (reminder.isExpired()) return;
         
         String key = "reminder_" + reminder.getId();
         cancelTask(key);
 
-        long delay = reminder.getTime() - System.currentTimeMillis();
+        long targetTime = reminder.getEffectiveTime();
+        long delay = targetTime - System.currentTimeMillis();
         if (delay < 0) delay = 0;
 
         ScheduledFuture<?> future = executor.schedule(() -> triggerReminder(reminder), delay, TimeUnit.MILLISECONDS);
         scheduledTasks.put(key, future);
         System.out.printf("[REMINDER SCHEDULER] Scheduling reminder: localId=%d, serverId=%d, time=%d, success=true%n",
-                reminder.getId(), reminder.getServerId() != null ? reminder.getServerId() : -1, reminder.getTime());
+                reminder.getId(), reminder.getServerId() != null ? reminder.getServerId() : -1, targetTime);
     }
 
     public void cancelReminder(Reminder reminder) {

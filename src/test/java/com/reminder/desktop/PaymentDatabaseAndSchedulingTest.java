@@ -27,6 +27,7 @@ public class PaymentDatabaseAndSchedulingTest {
     private static QuickNoteDao noteDao;
     private static ReminderDao reminderDao;
     private static MonthlyPaymentRepository repository;
+    private static com.reminder.desktop.repository.ReminderRepository reminderRepository;
 
     @BeforeAll
     public static void setUp() throws Exception {
@@ -38,6 +39,7 @@ public class PaymentDatabaseAndSchedulingTest {
         noteDao = new QuickNoteDao();
         reminderDao = new ReminderDao();
         repository = new MonthlyPaymentRepository();
+        reminderRepository = new com.reminder.desktop.repository.ReminderRepository();
     }
 
     // =========================================================================
@@ -342,5 +344,82 @@ public class PaymentDatabaseAndSchedulingTest {
                 DatabaseManager.addColumnIfNotExists(stmt, "non_existent_table_xyz", "bad_col TEXT");
             }, "Calling addColumnIfNotExists with a non-existent table must propagate SQLException");
         }
+    }
+
+    // =========================================================================
+    // 5. REMINDER SNOOZE & EFFECTIVE TIME TESTS
+    // =========================================================================
+
+    @Test
+    @Order(12)
+    @DisplayName("Snooze consistency: snoozeReminder preserves original scheduled time and updates snoozedTime")
+    public void testReminderSnoozePreservesOriginalTimeAndUpdatesSnoozedTime() throws Exception {
+        long originalTime = 1760000000000L;
+        Reminder reminder = new Reminder(null, null, "Doctor Appointment", originalTime, false, 0L, System.currentTimeMillis(), "PENDING");
+        reminderDao.insertReminder(reminder);
+        assertNotNull(reminder.getId());
+
+        // Initial state
+        assertEquals(originalTime, reminder.getTime(), "Original time must be intact initially");
+        assertEquals(0L, reminder.getSnoozedTime());
+        assertEquals(originalTime, reminder.getEffectiveTime());
+
+        // First snooze: +15 minutes
+        long beforeSnooze = System.currentTimeMillis();
+        reminderRepository.snoozeReminder(reminder, 15);
+
+        assertEquals(originalTime, reminder.getTime(), "Original scheduled time MUST remain untouched after snooze");
+        assertTrue(reminder.getSnoozedTime() >= beforeSnooze + 15 * 60 * 1000 - 1000L);
+        assertEquals(reminder.getSnoozedTime(), reminder.getEffectiveTime(), "Effective time must reflect snoozedTime");
+        assertFalse(reminder.isExpired(), "Snoozed reminder must not be marked expired");
+
+        // Verify persisted state in SQLite
+        Reminder loaded = reminderDao.getReminderById(reminder.getId());
+        assertNotNull(loaded);
+        assertEquals(originalTime, loaded.getTime(), "Persisted row must preserve original time");
+        assertEquals(reminder.getSnoozedTime(), loaded.getSnoozedTime(), "Persisted row must store snoozedTime");
+        assertEquals(reminder.getSnoozedTime(), loaded.getEffectiveTime());
+
+        // Repeated snooze: +30 minutes
+        long secondSnoozeTarget = System.currentTimeMillis() + 30 * 60 * 1000;
+        reminderRepository.snoozeReminder(reminder, 30);
+
+        assertEquals(originalTime, reminder.getTime(), "Repeated snooze MUST NOT alter original scheduled time");
+        assertTrue(reminder.getSnoozedTime() >= secondSnoozeTarget - 1000L);
+        assertEquals(reminder.getSnoozedTime(), reminder.getEffectiveTime());
+
+        // Clean up
+        reminderDao.deleteReminder(reminder.getId());
+        assertNull(reminderDao.getReminderById(reminder.getId()));
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("Snooze consistency: Sync payload separates original time and snoozedTime, scheduler respects snoozed trigger")
+    public void testReminderSyncPayloadAndSchedulerSnoozeHandling() {
+        long originalTime = 1760000000000L;
+        long snoozedUntil = 1760001800000L;
+        Reminder reminder = new Reminder(105, 501L, "Team Meeting", originalTime, false, snoozedUntil, System.currentTimeMillis(), "PENDING");
+
+        // Sync DTO payload verification
+        com.reminder.desktop.dto.ReminderDto dto = new com.reminder.desktop.dto.ReminderDto(
+                reminder.getServerId(),
+                reminder.getText(),
+                reminder.getTime(),
+                reminder.isExpired(),
+                reminder.getSnoozedTime()
+        );
+
+        assertEquals(Long.valueOf(originalTime), dto.getReminderTime(), "DTO reminderTime must be original time");
+        assertEquals(Long.valueOf(snoozedUntil), dto.getSnoozedTime(), "DTO snoozedTime must be snoozed timestamp");
+
+        // Scheduler handling: must use effective time
+        assertEquals(snoozedUntil, reminder.getEffectiveTime());
+        assertDoesNotThrow(() -> ReminderScheduler.getInstance().scheduleReminder(reminder));
+        assertDoesNotThrow(() -> ReminderScheduler.getInstance().cancelReminder(reminder));
+
+        // Expired reminder must not be scheduled
+        reminder.setExpired(true);
+        assertDoesNotThrow(() -> ReminderScheduler.getInstance().scheduleReminder(reminder));
     }
 }

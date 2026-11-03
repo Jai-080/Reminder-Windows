@@ -57,8 +57,10 @@ public class NotesView extends ScrollPane {
 
         // Input Actions
         addBtn.setOnAction(e -> {
+            addBtn.setDisable(true);
             controller.addNote(noteInput.getText(), this);
             noteInput.clear();
+            javafx.application.Platform.runLater(() -> addBtn.setDisable(false));
         });
         noteInput.setOnAction(e -> {
             controller.addNote(noteInput.getText(), this);
@@ -198,13 +200,13 @@ public class NotesView extends ScrollPane {
 
             // Edit Button
             Button editBtn = new Button("Edit");
-            editBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+            editBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
             editBtn.setOnAction(e -> triggerEditDialog(note));
 
             // Delete Button
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+            delBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
             delBtn.setOnAction(e -> controller.deleteNote(note, this));
 
             HBox controls;

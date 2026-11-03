@@ -80,7 +80,7 @@ public class ReminderRepository {
 
     public void snoozeReminder(Reminder reminder, int minutes) throws Exception {
         long snoozedTime = System.currentTimeMillis() + (long) minutes * 60 * 1000;
-        reminder.setTime(snoozedTime);
+        // Preserve original scheduled time; update only snoozedTime
         reminder.setSnoozedTime(snoozedTime);
         reminder.setExpired(false);
         reminder.setSyncStatus("PENDING");

@@ -72,6 +72,10 @@ public class Reminder {
         this.snoozedTime = snoozedTime;
     }
 
+    public long getEffectiveTime() {
+        return (snoozedTime > 0) ? snoozedTime : time;
+    }
+
     public Long getUpdatedAt() {
         return updatedAt;
     }

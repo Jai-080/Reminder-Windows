@@ -1,6 +1,7 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.models.MonthlyPayment;
+import com.reminder.desktop.models.RecurrenceType;
 import com.reminder.desktop.repository.MonthlyPaymentRepository;
 import javafx.application.Platform;
 
@@ -28,10 +29,14 @@ public class PaymentController {
     }
 
     public void addPayment(String name, LocalDate date, PaymentView view) {
-        addPayment(name, date, null, "MONTHLY", view);
+        addPayment(name, date, null, "MONTHLY", 28, view);
     }
 
     public void addPayment(String name, LocalDate date, String amountStr, String recurrenceStr, PaymentView view) {
+        addPayment(name, date, amountStr, recurrenceStr, 28, view);
+    }
+
+    public void addPayment(String name, LocalDate date, String amountStr, String recurrenceStr, Integer customIntervalDays, PaymentView view) {
         if (name == null || name.trim().isEmpty() || date == null) return;
 
         new Thread(() -> {
@@ -44,23 +49,36 @@ public class PaymentController {
                     } catch (NumberFormatException ignored) {}
                 }
                 
-                com.reminder.desktop.models.RecurrenceType recurrence = com.reminder.desktop.models.RecurrenceType.MONTHLY;
+                RecurrenceType recurrence = RecurrenceType.MONTHLY;
                 if (recurrenceStr != null) {
                     try {
                         String cleanRec = recurrenceStr.replace("-", "_").replace(" ", "_").toUpperCase();
-                        recurrence = com.reminder.desktop.models.RecurrenceType.valueOf(cleanRec);
+                        recurrence = RecurrenceType.valueOf(cleanRec);
                     } catch (IllegalArgumentException ignored) {}
                 }
+
+                int interval = customIntervalDays != null && customIntervalDays > 0 ? customIntervalDays : 28;
 
                 // Internally default to "7,3,1,0" for offsets
                 String notificationOffsets = "7,3,1,0";
 
-                repository.addPayment(name.trim(), epochMillis, amount, recurrence, notificationOffsets);
+                repository.addPayment(name.trim(), epochMillis, amount, recurrence, interval, notificationOffsets);
                 Platform.runLater(() -> loadPayments(view));
             } catch (Exception e) {
                 System.err.println("Error adding payment: " + e.getMessage());
             }
         }).start();
+    }
+
+    public void updatePayment(MonthlyPayment payment, PaymentView view) {
+        new Thread(() -> {
+            try {
+                repository.updatePayment(payment);
+                Platform.runLater(() -> loadPayments(view));
+            } catch (Exception e) {
+                System.err.println("Error updating payment: " + e.getMessage());
+            }
+        }, "UpdatePaymentThread").start();
     }
 
     public void toggleComplete(MonthlyPayment payment, PaymentView view) {
@@ -71,7 +89,7 @@ public class PaymentController {
             } catch (Exception e) {
                 System.err.println("Error toggling payment complete: " + e.getMessage());
             }
-        }).start();
+        }, "TogglePaymentCompleteThread").start();
     }
 
     public void deletePayment(MonthlyPayment payment, PaymentView view) {
@@ -82,6 +100,6 @@ public class PaymentController {
             } catch (Exception e) {
                 System.err.println("Error deleting payment: " + e.getMessage());
             }
-        }).start();
+        }, "DeletePaymentThread").start();
     }
 }

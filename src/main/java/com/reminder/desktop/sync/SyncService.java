@@ -327,7 +327,7 @@ public class SyncService {
                         localReminder.setSyncStatus("SYNCED");
                         reminderDao.updateReminder(localReminder);
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().cancelReminder(localReminder);
-                        if (!localReminder.isExpired() && localReminder.getTime() > System.currentTimeMillis()) {
+                        if (!localReminder.isExpired() && localReminder.getEffectiveTime() > System.currentTimeMillis()) {
                             com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(localReminder);
                         }
                     }
@@ -343,7 +343,7 @@ public class SyncService {
                             "SYNCED"
                     );
                     reminderDao.insertReminder(newReminder);
-                    if (!newReminder.isExpired() && newReminder.getTime() > System.currentTimeMillis()) {
+                    if (!newReminder.isExpired() && newReminder.getEffectiveTime() > System.currentTimeMillis()) {
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().scheduleReminder(newReminder);
                     }
                 }
@@ -447,11 +447,15 @@ public class SyncService {
                         RecurrenceType rec = RecurrenceType.MONTHLY;
                         if (recStr != null) {
                             try {
-                                rec = RecurrenceType.valueOf(recStr.toUpperCase());
+                                rec = RecurrenceType.fromString(recStr);
                             } catch (IllegalArgumentException ignored) {}
                         }
+                        int origDay = dto.getOriginalDueDay() != null ? dto.getOriginalDueDay() : localPayment.getOriginalDueDay();
+                        int customInterval = dto.getCustomIntervalDays() != null ? dto.getCustomIntervalDays() : localPayment.getCustomIntervalDays();
                         localPayment.setRecurrence(rec);
                         localPayment.setNotificationOffsets(dto.getNotificationOffsets() != null ? dto.getNotificationOffsets() : "0");
+                        localPayment.setOriginalDueDay(origDay);
+                        localPayment.setCustomIntervalDays(customInterval);
                         
                         localPayment.setUpdatedAt(serverMillis);
                         localPayment.setSyncStatus("SYNCED");
@@ -466,7 +470,7 @@ public class SyncService {
                     RecurrenceType rec = RecurrenceType.MONTHLY;
                     if (recStr != null) {
                         try {
-                            rec = RecurrenceType.valueOf(recStr.toUpperCase());
+                            rec = RecurrenceType.fromString(recStr);
                         } catch (IllegalArgumentException ignored) {}
                     }
                     String offsets = dto.getNotificationOffsets() != null ? dto.getNotificationOffsets() : "0";
@@ -484,6 +488,15 @@ public class SyncService {
                             offsets
                     );
                     newPayment.setLastPaidAt(dto.getLastPaidAt());
+                    int origDay = dto.getOriginalDueDay() != null ? dto.getOriginalDueDay() : 0;
+                    if (origDay <= 0 && newPayment.getDueDate() > 0) {
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTimeInMillis(newPayment.getDueDate());
+                        origDay = cal.get(java.util.Calendar.DAY_OF_MONTH);
+                    }
+                    int customInterval = dto.getCustomIntervalDays() != null && dto.getCustomIntervalDays() > 0 ? dto.getCustomIntervalDays() : 28;
+                    newPayment.setOriginalDueDay(origDay);
+                    newPayment.setCustomIntervalDays(customInterval);
                     paymentDao.insertPayment(newPayment);
                     if (!newPayment.isRecentlyPaid() && newPayment.getDueDate() >= startOfToday) {
                         com.reminder.desktop.notifications.ReminderScheduler.getInstance().schedulePayment(newPayment);
@@ -493,8 +506,21 @@ public class SyncService {
         }
 
         // 2. Push Pending to Server
+        for (MonthlyPayment p : paymentDao.getAllPayments()) {
+            if ("LOCAL_ONLY".equals(p.getSyncStatus()) && p.getRecurrence() != null && !p.getRecurrence().isLocalOnly()) {
+                p.setSyncStatus("PENDING");
+                paymentDao.updatePayment(p);
+            }
+        }
         List<MonthlyPayment> pendingPayments = paymentDao.getSyncPendingPayments();
         for (MonthlyPayment local : pendingPayments) {
+            if ((local.getRecurrence() != null && local.getRecurrence().isLocalOnly()) || "LOCAL_ONLY".equals(local.getSyncStatus())) {
+                System.out.println("Skipping server push for payment '" + local.getName() + "': RecurrenceType." + local.getRecurrence() + " is stored LOCAL_ONLY.");
+                local.setSyncStatus("LOCAL_ONLY");
+                paymentDao.updatePayment(local);
+                continue;
+            }
+
             MonthlyPaymentDto dto = new MonthlyPaymentDto(
                     local.getServerId(),
                     local.getName(),
@@ -506,6 +532,10 @@ public class SyncService {
             );
             dto.setLastPaidAt(local.getLastPaidAt());
             dto.setUpdatedAt(String.valueOf(local.getUpdatedAt()));
+            dto.setOriginalDueDay(local.getOriginalDueDay());
+            if (local.getRecurrence() == RecurrenceType.CUSTOM_DAYS) {
+                dto.setCustomIntervalDays(local.getCustomIntervalDays() > 0 ? local.getCustomIntervalDays() : 28);
+            }
             if (local.getServerId() == null) {
                 MonthlyPaymentDto responseDto = apiClient.post("/api/payments", dto, MonthlyPaymentDto.class);
                 local.setServerId(responseDto.getId());

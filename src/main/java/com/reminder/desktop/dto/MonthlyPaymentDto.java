@@ -14,6 +14,8 @@ public class MonthlyPaymentDto {
     private String notificationOffsets;
     private String createdAt;
     private String updatedAt;
+    private Integer originalDueDay;
+    private Integer customIntervalDays;
 
     public MonthlyPaymentDto() {
     }
@@ -136,5 +138,21 @@ public class MonthlyPaymentDto {
 
     public void setLastPaidAt(Long lastPaidAt) {
         this.lastPaidAt = lastPaidAt;
+    }
+
+    public Integer getOriginalDueDay() {
+        return originalDueDay;
+    }
+
+    public void setOriginalDueDay(Integer originalDueDay) {
+        this.originalDueDay = originalDueDay;
+    }
+
+    public Integer getCustomIntervalDays() {
+        return customIntervalDays;
+    }
+
+    public void setCustomIntervalDays(Integer customIntervalDays) {
+        this.customIntervalDays = customIntervalDays;
     }
 }

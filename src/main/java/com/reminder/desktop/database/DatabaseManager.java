@@ -42,7 +42,7 @@ public class DatabaseManager {
         return conn;
     }
 
-    private static void initializeTables(Connection conn) {
+    public static void initializeTables(Connection conn) throws SQLException {
         String createNotesTable = "CREATE TABLE IF NOT EXISTS quick_notes (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "server_id BIGINT, " +
@@ -78,50 +78,40 @@ public class DatabaseManager {
                 "last_completed_month INTEGER, " +
                 "last_completed_year INTEGER, " +
                 "completed_at INTEGER, " +
-                "last_paid_at INTEGER" +
+                "last_paid_at INTEGER, " +
+                "original_due_day INTEGER, " +
+                "custom_interval_days INTEGER" +
                 ");";
 
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(createNotesTable);
             stmt.execute(createRemindersTable);
             stmt.execute(createPaymentsTable);
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN amount REAL");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN recurrence TEXT DEFAULT 'MONTHLY'");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN notification_offsets TEXT DEFAULT '0'");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_completed_month INTEGER");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_completed_year INTEGER");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN completed_at INTEGER");
-            } catch (SQLException e) {
-                // Column already exists
-            }
-            try {
-                stmt.execute("ALTER TABLE monthly_payments ADD COLUMN last_paid_at INTEGER");
-            } catch (SQLException e) {
-                // Column already exists
-            }
+
+            addColumnIfNotExists(stmt, "monthly_payments", "amount REAL");
+            addColumnIfNotExists(stmt, "monthly_payments", "recurrence TEXT DEFAULT 'MONTHLY'");
+            addColumnIfNotExists(stmt, "monthly_payments", "notification_offsets TEXT DEFAULT '0'");
+            addColumnIfNotExists(stmt, "monthly_payments", "last_completed_month INTEGER");
+            addColumnIfNotExists(stmt, "monthly_payments", "last_completed_year INTEGER");
+            addColumnIfNotExists(stmt, "monthly_payments", "completed_at INTEGER");
+            addColumnIfNotExists(stmt, "monthly_payments", "last_paid_at INTEGER");
+            addColumnIfNotExists(stmt, "monthly_payments", "original_due_day INTEGER");
+            addColumnIfNotExists(stmt, "monthly_payments", "custom_interval_days INTEGER");
         } catch (SQLException e) {
             System.err.println("Error initializing database tables: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void addColumnIfNotExists(Statement stmt, String tableName, String colDef) throws SQLException {
+        try {
+            stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN " + colDef);
+        } catch (SQLException e) {
+            String msg = e.getMessage();
+            if (msg != null && msg.toLowerCase().contains("duplicate column")) {
+                return;
+            }
+            throw e;
         }
     }
 }

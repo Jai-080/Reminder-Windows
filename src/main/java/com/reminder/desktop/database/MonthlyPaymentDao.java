@@ -10,8 +10,8 @@ import java.util.List;
 public class MonthlyPaymentDao {
 
     public void insertPayment(MonthlyPayment payment) throws SQLException {
-        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount, recurrence, notification_offsets, last_paid_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO monthly_payments (server_id, name, due_date, completed, updated_at, sync_status, amount, recurrence, notification_offsets, last_paid_at, original_due_day, custom_interval_days) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (payment.getServerId() != null) {
@@ -43,6 +43,12 @@ public class MonthlyPaymentDao {
                 pstmt.setLong(10, payment.getLastPaidAt());
             } else {
                 pstmt.setNull(10, Types.BIGINT);
+            }
+            pstmt.setInt(11, payment.getOriginalDueDay());
+            if (payment.getRecurrence() == RecurrenceType.CUSTOM_DAYS) {
+                pstmt.setInt(12, payment.getCustomIntervalDays() > 0 ? payment.getCustomIntervalDays() : 28);
+            } else {
+                pstmt.setNull(12, Types.INTEGER);
             }
             
             pstmt.executeUpdate();
@@ -80,7 +86,7 @@ public class MonthlyPaymentDao {
                     payment.getId(), payment.getServerId(), payment.getSyncStatus(), payment.getUpdatedAt());
 
             String sql = "UPDATE monthly_payments SET server_id = ?, name = ?, due_date = ?, " +
-                    "completed = ?, updated_at = ?, sync_status = ?, amount = ?, recurrence = ?, notification_offsets = ?, last_paid_at = ? WHERE id = ?";
+                    "completed = ?, updated_at = ?, sync_status = ?, amount = ?, recurrence = ?, notification_offsets = ?, last_paid_at = ?, original_due_day = ?, custom_interval_days = ? WHERE id = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 if (payment.getServerId() != null) {
                     pstmt.setLong(1, payment.getServerId());
@@ -112,7 +118,13 @@ public class MonthlyPaymentDao {
                 } else {
                     pstmt.setNull(10, Types.BIGINT);
                 }
-                pstmt.setInt(11, payment.getId());
+                pstmt.setInt(11, payment.getOriginalDueDay());
+                if (payment.getRecurrence() == RecurrenceType.CUSTOM_DAYS) {
+                    pstmt.setInt(12, payment.getCustomIntervalDays() > 0 ? payment.getCustomIntervalDays() : 28);
+                } else {
+                    pstmt.setNull(12, Types.INTEGER);
+                }
+                pstmt.setInt(13, payment.getId());
                 
                 pstmt.executeUpdate();
             }
@@ -234,6 +246,18 @@ public class MonthlyPaymentDao {
         }
         long lastPaidAtVal = rs.getLong("last_paid_at");
         Long lastPaidAt = rs.wasNull() ? null : lastPaidAtVal;
+
+        int origDay = 0;
+        try {
+            origDay = rs.getInt("original_due_day");
+            if (rs.wasNull()) origDay = 0;
+        } catch (SQLException ignored) {}
+
+        int customInterval = 28;
+        try {
+            customInterval = rs.getInt("custom_interval_days");
+            if (rs.wasNull() || customInterval <= 0) customInterval = 28;
+        } catch (SQLException ignored) {}
         
         MonthlyPayment payment = new MonthlyPayment(
                 rs.getInt("id"),
@@ -245,7 +269,9 @@ public class MonthlyPaymentDao {
                 rs.getString("sync_status"),
                 amount,
                 recurrence,
-                notificationOffsets
+                notificationOffsets,
+                origDay,
+                customInterval
         );
         payment.setLastPaidAt(lastPaidAt);
         return payment;

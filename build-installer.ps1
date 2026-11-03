@@ -32,9 +32,9 @@ if (-not (Test-Path $candlePath)) {
 # 2. Add WiX to path temporarily for this session
 $env:PATH = "$wixDir;" + $env:PATH
 
-# 3. Clean and Package Application using Maven
+# 3. Package Application using Maven
 Write-Host "Building application with Maven..." -ForegroundColor Cyan
-& .\mvnw.cmd clean package -DskipTests
+& .\mvnw.cmd package -DskipTests
 
 # 4. Copy dependency jars to target/libs
 Write-Host "Copying dependencies to target/libs..." -ForegroundColor Cyan
@@ -64,6 +64,8 @@ Write-Host "Using jpackage: $jpackagePath" -ForegroundColor Cyan
 $installerDest = Join-Path $PSScriptRoot "target\installer"
 if (-not (Test-Path $installerDest)) {
     New-Item -ItemType Directory -Path $installerDest | Out-Null
+} else {
+    Remove-Item -Path "$installerDest\*" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # 8. Run jpackage

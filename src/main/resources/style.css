@@ -1,80 +1,88 @@
-/* Reminder Design System — tokens rebuilt from the shipped style.css for WCAG AA
-   contrast and one consolidated type/elevation scale. See the project's design
-   system (tokens.json) for the source values and usage notes behind each one. */
+/* Reminder Desktop — Material 3 Graphite & Lime Design System
+   Matches Android Reminder 2.1 design tokens, components, and elevation. */
 
 .root {
-    /* Color Palette - Light (default) */
-    -color-bg: #FAFAFC;
+    /* Color Palette - Light (Default) */
+    -color-bg: #F6F8F0;
     -color-surface: #FFFFFF;
-    -color-sidebar-bg: #F4F1FF;
+    -color-surface-elevated: #F0F3E8;
+    -color-sidebar-bg: #F0F3E8;
     -color-input-bg: #FFFFFF;
-    -color-border: #E8E6F5;
+    -color-border: #D2DAC7;
+    -color-border-subtle: #E2E8DC;
     -color-card-bg: #FFFFFF;
 
-    -color-text: #1D1B20;
-    -color-text-secondary: #49454F;
-    -color-hint: #928FA1;
+    -color-text: #191D19;
+    -color-text-secondary: #596250;
+    -color-hint: #8E9885;
     -color-on-accent: #FFFFFF;
 
-    -color-accent: #6554E6;
-    -color-accent-hover: #5245D9;
-    -color-accent-pressed: #4135BF;
-    -color-accent-light: #F4F1FF;
+    /* Lime Primary Brand Colors */
+    -color-accent: #83A83D;
+    -color-accent-hover: #759736;
+    -color-accent-pressed: #67862F;
+    -color-accent-light: #EBF0DC;
+    -color-accent-tertiary: #D9EBA9;
 
-    -color-success: #0D805D;
-    -color-success-hover: #E6FCF5;
+    -color-success: #386A20;
+    -color-success-hover: #E8F5E1;
 
-    -color-danger: #BA5A3E;
-    -color-danger-hover: #FCEBE8;
+    -color-danger: #BA1A1A;
+    -color-danger-hover: #FFDAD6;
 
-    -color-warning: #BE5626;
-    -color-warning-hover: #FCECE1;
+    -color-warning: #C05621;
+    -color-warning-hover: #FFDBCF;
 
-    -color-offline: #D02A64;
-    -color-offline-hover: #FFF0F6;
+    -color-offline: #BA1A1A;
+    -color-offline-hover: #FFDAD6;
 
-    -color-scrollbar-thumb: #CED4DA;
-    -color-scrollbar-thumb-hover: #ADB5BD;
-    -color-toggle-track-off: #E2E8F0;
+    -color-scrollbar-thumb: #C2CBB7;
+    -color-scrollbar-thumb-hover: #AAB49E;
+    -color-toggle-track-off: #F2F5EA;
 
-    -fx-font-family: "Segoe UI", "Inter", -fx-system;
+    -fx-font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", sans-serif;
     -fx-font-size: 13px;
     -fx-background-color: -color-bg;
 }
 
-/* Color Palette - Dark */
+/* Color Palette - Dark: Pure Premium Graphite (Zero Murky Green Wash) */
 .root.dark {
-    -color-bg: #111113;
-    -color-surface: #1B1B21;
-    -color-sidebar-bg: #2A2831;
-    -color-input-bg: #1F1F1F;
-    -color-border: #343240;
-    -color-card-bg: #1B1B21;
+    -color-bg: #121312;
+    -color-surface: #1C1E1C;
+    -color-surface-elevated: #262926;
+    -color-sidebar-bg: #1C1E1C;
+    -color-input-bg: #1C1E1C;
+    -color-border: #373B36;
+    -color-border-subtle: #2A2D29;
+    -color-card-bg: #1C1E1C;
 
-    -color-text: #FFFFFF;
-    -color-text-secondary: #C6C2D3;
-    -color-hint: #75717F;
+    -color-text: #F4F5F2;
+    -color-text-secondary: #9EA39B;
+    -color-hint: #6E736B;
+    -color-on-accent: #191D19; /* High-contrast graphite text on bright lime */
 
-    -color-accent: #9487FF;
-    -color-accent-hover: #A396FF;
-    -color-accent-pressed: #786BEA;
-    -color-accent-light: #252233;
+    /* Bright Lime Accent for Dark Mode */
+    -color-accent: #B2D66C;
+    -color-accent-hover: #C2E27F;
+    -color-accent-pressed: #A2C65C;
+    -color-accent-light: #2A3320;
+    -color-accent-tertiary: #83A83D;
 
-    -color-success: #20C997;
+    -color-success: #9CD67D;
     -color-success-hover: #1A3E34;
 
-    -color-danger: #C56B51;
-    -color-danger-hover: #40221A;
+    -color-danger: #FFB4AB;
+    -color-danger-hover: #410002;
 
-    -color-warning: #D5632E;
+    -color-warning: #FFB59D;
     -color-warning-hover: #402A1A;
 
-    -color-offline: #FAA2C1;
-    -color-offline-hover: #3B1B2A;
+    -color-offline: #FFB4AB;
+    -color-offline-hover: #410002;
 
-    -color-scrollbar-thumb: #495057;
-    -color-scrollbar-thumb-hover: #6C757D;
-    -color-toggle-track-off: #2D3035;
+    -color-scrollbar-thumb: #373B36;
+    -color-scrollbar-thumb-hover: #4A4F49;
+    -color-toggle-track-off: #1C1E1C;
 }
 
 /* Typography & Labels */
@@ -82,16 +90,14 @@
     -fx-text-fill: -color-text;
 }
 
-/* Consolidated type scale (replaces the source's 11/12/14/15px "section header"
-   and 18/22/24px "page title" treatments with one named style per role). */
 .title-label {
-    /* h2 — page titles: Quick Notes, Timed Reminders, Payments, Sign In / Create Account */
+    /* h2 — page titles: Quick Notes, Timed Reminders, Payments, Sign In */
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-text;
 }
 .subtitle-label {
-    /* body-sm — secondary copy, matches the app's 13px base */
+    /* body-sm — secondary copy */
     -fx-font-size: 13px;
     -fx-text-fill: -color-text-secondary;
 }
@@ -102,73 +108,73 @@
     -fx-text-fill: -color-text;
 }
 .text-title-sm {
-    /* title-sm — list-section titles: Active Reminders, Fired & Expired, Payments List */
+    /* title-sm — list-section titles */
     -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-text;
 }
 .text-label-lg, .empty-state-title {
-    /* label-lg — card-level headings: empty-state title, Recent Checklist, Upcoming Agenda */
+    /* label-lg — card-level headings */
     -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-text;
 }
 .text-body {
-    /* body — form-section titles: Schedule New Reminder, Add Payment */
+    /* body — form-section titles */
     -fx-font-size: 14px;
     -fx-font-weight: normal;
     -fx-text-fill: -color-text;
 }
 .text-eyebrow {
-    /* eyebrow — QUICK NOTES / REMINDERS / PAYMENTS card labels, agenda sub-heads */
+    /* eyebrow — lime tagged category headers */
     -fx-font-size: 12px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-accent;
 }
 
-/* Text Fields & Password Fields */
+/* Text Fields & Password Fields (M3 Outlined 12px radius) */
 .text-field, .password-field {
     -fx-background-color: -color-input-bg;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
     -fx-text-fill: -color-text;
     -fx-prompt-text-fill: -color-hint;
-    -fx-padding: 8px 12px;
-    -fx-transition: border-color 0.2s ease-in-out;
+    -fx-padding: 9px 14px;
 }
 .text-field:focused, .password-field:focused {
     -fx-border-color: -color-accent;
+    -fx-border-width: 1.5px;
     -fx-background-color: -color-input-bg;
 }
 
-/* Buttons */
+/* Standard Buttons */
 .button {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
     -fx-text-fill: -color-text;
-    -fx-padding: 8px 16px;
+    -fx-padding: 8px 18px;
     -fx-cursor: hand;
     -fx-font-weight: 500;
 }
 .button:hover {
-    -fx-background-color: -color-bg;
-    -fx-border-color: -color-text-secondary;
+    -fx-background-color: -color-surface-elevated;
+    -fx-border-color: -color-accent;
 }
 .button:pressed {
-    -fx-background-color: -color-border;
+    -fx-background-color: -color-border-subtle;
 }
 
 /* Menu Button Customization */
 .menu-button {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
     -fx-text-fill: -color-text;
     -fx-padding: 8px 16px;
@@ -176,11 +182,11 @@
     -fx-font-weight: 500;
 }
 .menu-button:hover {
-    -fx-background-color: -color-bg;
-    -fx-border-color: -color-text-secondary;
+    -fx-background-color: -color-surface-elevated;
+    -fx-border-color: -color-accent;
 }
 .menu-button:pressed {
-    -fx-background-color: -color-border;
+    -fx-background-color: -color-border-subtle;
 }
 .menu-button > .label {
     -fx-text-fill: -color-text;
@@ -193,15 +199,17 @@
     -fx-background-color: -color-text-secondary;
 }
 
-/* Accent Buttons */
+/* Accent Buttons (Pill-shaped 20px radius matching Android M3) */
 .button-accent {
     -fx-background-color: -color-accent;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
     -fx-border-width: 0px;
     -fx-text-fill: -color-on-accent;
     -fx-font-weight: bold;
-    -fx-padding: 9px 18px;
+    -fx-padding: 9px 20px;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.12), 4, 0, 0, 2);
 }
 .button-accent:hover {
     -fx-background-color: -color-accent-hover;
@@ -215,32 +223,33 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-text-fill: -color-danger;
-    -fx-padding: 6px 12px;
+    -fx-padding: 6px 14px;
     -fx-cursor: hand;
     -fx-font-weight: bold;
-    -fx-background-radius: 4px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
 }
 .button-danger:hover {
     -fx-background-color: -color-danger-hover;
 }
 .button-danger:pressed {
     -fx-background-color: -color-danger;
-    -fx-text-fill: -color-on-accent;
+    -fx-text-fill: #FFFFFF;
 }
 
-/* Cards */
+/* Material 3 Expressive Cards (16px rounded corners, subtle outline, soft elevation) */
 .card {
     -fx-background-color: -color-card-bg;
-    -fx-background-radius: 10px;
+    -fx-background-radius: 16px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 10px;
+    -fx-border-radius: 16px;
     -fx-border-width: 1px;
-    -fx-padding: 16px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.04), 8, 0, 0, 4);
+    -fx-padding: 20px;
+    -fx-effect: dropshadow(three-pass-box, rgba(25, 29, 25, 0.05), 10, 0, 0, 3);
 }
 .card:hover {
     -fx-border-color: -color-accent;
-    -fx-effect: dropshadow(three-pass-box, rgba(101, 84, 230, 0.10), 12, 0, 0, 6);
+    -fx-effect: dropshadow(three-pass-box, rgba(131, 168, 61, 0.16), 14, 0, 0, 5);
 }
 .root.dark .card {
     -fx-effect: none;
@@ -255,7 +264,7 @@
     -fx-background-color: -color-sidebar-bg;
     -fx-border-color: -color-border;
     -fx-border-width: 0 1px 0 0;
-    -fx-padding: 24px 12px;
+    -fx-padding: 24px 14px;
 }
 .sidebar-button {
     -fx-background-color: transparent;
@@ -263,12 +272,14 @@
     -fx-text-fill: -color-text;
     -fx-alignment: center-left;
     -fx-padding: 10px 16px;
-    -fx-font-weight: normal;
-    -fx-background-radius: 6px;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
     -fx-cursor: hand;
 }
 .sidebar-button:hover {
-    -fx-background-color: -color-border;
+    -fx-background-color: -color-border-subtle;
 }
 .sidebar-button.active {
     -fx-background-color: -color-accent-light;
@@ -294,7 +305,7 @@
 }
 .scroll-pane .scroll-bar .thumb {
     -fx-background-color: -color-scrollbar-thumb;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 8px;
 }
 .scroll-pane .scroll-bar .thumb:hover {
     -fx-background-color: -color-scrollbar-thumb-hover;
@@ -316,9 +327,9 @@
 .check-box .box {
     -fx-background-color: -color-surface;
     -fx-border-color: -color-border;
-    -fx-border-radius: 4px;
-    -fx-background-radius: 4px;
-    -fx-padding: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 3px;
 }
 .check-box:selected .box {
     -fx-background-color: -color-accent;
@@ -336,27 +347,28 @@
 }
 .date-picker > .text-field {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px 0 0 6px;
+    -fx-background-radius: 12px 0 0 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px 0 0 6px;
+    -fx-border-radius: 12px 0 0 12px;
     -fx-border-width: 1px 0 1px 1px;
     -fx-text-fill: -color-text;
-    -fx-padding: 8px 12px;
+    -fx-padding: 9px 14px;
 }
 .date-picker > .text-field:focused {
     -fx-border-color: -color-accent;
 }
 .date-picker > .button {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 0 6px 6px 0;
+    -fx-background-radius: 0 12px 12px 0;
     -fx-border-color: -color-border;
-    -fx-border-radius: 0 6px 6px 0;
+    -fx-border-radius: 0 12px 12px 0;
     -fx-border-width: 1px 1px 1px 0;
-    -fx-padding: 8px 12px;
+    -fx-padding: 9px 14px;
     -fx-cursor: hand;
 }
 .date-picker > .button:hover {
-    -fx-background-color: -color-bg;
+    -fx-background-color: -color-surface-elevated;
+    -fx-border-color: -color-accent;
 }
 .date-picker > .button > .arrow-button {
     -fx-background-color: transparent;
@@ -369,10 +381,10 @@
 .dialog-pane {
     -fx-background-color: -color-surface;
     -fx-border-color: -color-border;
-    -fx-border-radius: 12px;
-    -fx-background-radius: 12px;
-    -fx-padding: 20px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 16, 0, 0, 8);
+    -fx-border-radius: 16px;
+    -fx-background-radius: 16px;
+    -fx-padding: 24px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 18, 0, 0, 8);
 }
 .dialog-pane .header-panel {
     -fx-background-color: -color-surface;
@@ -391,8 +403,8 @@
     -fx-padding: 16px 0 0 0;
 }
 .dialog-pane .button-bar .button {
-    -fx-background-radius: 6px;
-    -fx-padding: 8px 16px;
+    -fx-background-radius: 12px;
+    -fx-padding: 8px 18px;
 }
 
 /* Empty States */
@@ -400,13 +412,12 @@
     -fx-alignment: center;
     -fx-padding: 32px;
     -fx-background-color: -color-surface;
-    -fx-background-radius: 10px;
+    -fx-background-radius: 16px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 10px;
+    -fx-border-radius: 16px;
     -fx-border-style: dashed;
     -fx-border-width: 1.5px;
 }
-/* The empty-state icon slot: an SVGPath line icon (see UIUtils.checklistIcon/bellIcon/walletIcon) */
 .empty-state-icon-shape {
     -fx-stroke: -color-text-secondary;
     -fx-fill: transparent;
@@ -417,7 +428,6 @@
     -fx-scale-x: 1.3;
     -fx-scale-y: 1.3;
 }
-/* .empty-state-title moved up to the consolidated type scale (.text-label-lg) */
 .empty-state-title {
     -fx-padding: 8 0 4 0;
 }
@@ -427,11 +437,11 @@
     -fx-alignment: center;
 }
 
-/* Badge Styling — always a soft tint fill with matching saturated text, never solid */
+/* Badge Styling — soft tonal container with vibrant text */
 .badge-pill {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-padding: 3px 8px;
+    -fx-padding: 3px 10px;
     -fx-background-radius: 999px;
 }
 .badge-pending {
@@ -447,15 +457,15 @@
     -fx-text-fill: -color-success;
 }
 .badge-offline {
-    -fx-background-color: -color-offline-hover;
-    -fx-text-fill: -color-offline;
+    -fx-background-color: -color-danger-hover;
+    -fx-text-fill: -color-danger;
 }
 .badge-warning {
     -fx-background-color: -color-warning-hover;
     -fx-text-fill: -color-warning;
 }
 .badge-neutral {
-    -fx-background-color: -color-border;
+    -fx-background-color: -color-border-subtle;
     -fx-text-fill: -color-text-secondary;
 }
 
@@ -466,28 +476,29 @@
     -fx-border-width: 0 0 1px 0;
     -fx-padding: 12px 16px;
     -fx-alignment: center-left;
-    -fx-transition: background-color 0.15s ease;
 }
 .row-card-item:hover {
-    -fx-background-color: -color-bg;
+    -fx-background-color: -color-surface-elevated;
 }
 
 /* Combo Box Customization */
 .combo-box {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
     -fx-text-fill: -color-text;
     -fx-padding: 7px 12px;
     -fx-cursor: hand;
 }
 .combo-box:hover {
-    -fx-background-color: -color-bg;
+    -fx-background-color: -color-surface-elevated;
+    -fx-border-color: -color-accent;
 }
 .combo-box:focused {
     -fx-border-color: -color-accent;
+    -fx-border-width: 1.5px;
 }
 .combo-box > .list-cell {
     -fx-text-fill: -color-text;
@@ -506,10 +517,10 @@
 .combo-box-popup > .list-view {
     -fx-background-color: -color-surface;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
-    -fx-background-radius: 6px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
-    -fx-padding: 4px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 12, 0, 0, 4);
+    -fx-padding: 6px;
 }
 .combo-box-popup > .list-view > .placeholder > .label {
     -fx-text-fill: -color-text-secondary;
@@ -517,8 +528,8 @@
 .combo-box-popup > .list-view .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: -color-text;
-    -fx-padding: 6px 12px;
-    -fx-background-radius: 4px;
+    -fx-padding: 8px 12px;
+    -fx-background-radius: 8px;
 }
 .combo-box-popup > .list-view .list-cell:filled:hover {
     -fx-background-color: -color-accent-light;
@@ -533,9 +544,9 @@
 /* Spinner Customization */
 .spinner {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
 }
 .spinner > .text-field {
@@ -552,22 +563,21 @@
 }
 .spinner > .increment-arrow-button:hover,
 .spinner > .decrement-arrow-button:hover {
-    -fx-background-color: -color-bg;
+    -fx-background-color: -color-surface-elevated;
 }
 .spinner > .increment-arrow-button > .increment-arrow,
 .spinner > .decrement-arrow-button > .decrement-arrow {
     -fx-background-color: -color-text-secondary;
 }
 
-/* Time Picker — wraps two Spinners in one shared bg-input/border/radius-sm box,
-   matching the TextField component's "one shared box model" rule. */
+/* Time Picker Box */
 .time-picker-box {
     -fx-background-color: -color-input-bg;
-    -fx-background-radius: 6px;
+    -fx-background-radius: 12px;
     -fx-border-color: -color-border;
-    -fx-border-radius: 6px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
-    -fx-padding: 0 2px;
+    -fx-padding: 0 4px;
 }
 .time-picker-box > .spinner {
     -fx-background-color: transparent;
@@ -578,14 +588,14 @@
 .date-picker-popup {
     -fx-background-color: -color-surface;
     -fx-border-color: -color-border;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
-    -fx-padding: 8px;
+    -fx-border-radius: 16px;
+    -fx-background-radius: 16px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 14, 0, 0, 6);
+    -fx-padding: 12px;
 }
 .date-picker-popup > .month-year-pane {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 6px 6px 0 0;
+    -fx-background-radius: 12px 12px 0 0;
     -fx-padding: 8px;
     -fx-alignment: center;
 }
@@ -600,10 +610,10 @@
     -fx-text-fill: -color-text-secondary;
     -fx-cursor: hand;
     -fx-padding: 4px 8px;
-    -fx-background-radius: 4px;
+    -fx-background-radius: 6px;
 }
 .date-picker-popup > .month-year-pane > .button:hover {
-    -fx-background-color: -color-bg;
+    -fx-background-color: -color-surface-elevated;
     -fx-text-fill: -color-accent;
 }
 .date-picker-popup > .month-year-pane > .button > .left-arrow,
@@ -619,7 +629,7 @@
     -fx-text-fill: -color-text;
     -fx-padding: 6px;
     -fx-alignment: center;
-    -fx-background-radius: 4px;
+    -fx-background-radius: 8px;
 }
 .date-picker-popup .date-cell:hover {
     -fx-background-color: -color-accent-light;
@@ -634,7 +644,7 @@
 .date-picker-popup .today {
     -fx-border-color: -color-accent;
     -fx-border-width: 1px;
-    -fx-border-radius: 4px;
+    -fx-border-radius: 8px;
 }
 .date-picker-popup .previous-month-date-cell,
 .date-picker-popup .next-month-date-cell {
@@ -642,33 +652,19 @@
     -fx-opacity: 0.4;
 }
 
-/* Custom Toggle Switch styling */
-.toggle-switch-track {
-    -fx-background-color: -color-toggle-track-off;
-    -fx-background-radius: 11;
-    -fx-border-radius: 11;
-    -fx-pref-width: 42px;
-    -fx-pref-height: 22px;
-    -fx-min-width: 42px;
-    -fx-min-height: 22px;
-    -fx-max-width: 42px;
-    -fx-max-height: 22px;
-    -fx-alignment: center-left;
-    -fx-padding: 2px;
-    -fx-cursor: hand;
+/* User Profile Badge Card */
+.profile-card {
+    -fx-background-color: -color-surface-elevated;
+    -fx-background-radius: 14px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 12px;
 }
-.toggle-switch-track.active {
+.avatar-circle {
     -fx-background-color: -color-accent;
-}
-.toggle-switch-thumb {
-    -fx-background-color: -color-on-accent;
-    -fx-background-radius: 9;
-    -fx-border-radius: 9;
-    -fx-pref-width: 18px;
-    -fx-pref-height: 18px;
-    -fx-min-width: 18px;
-    -fx-min-height: 18px;
-    -fx-max-width: 18px;
-    -fx-max-height: 18px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 2, 0, 0, 1);
+    -fx-background-radius: 999px;
+    -fx-text-fill: -color-on-accent;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
 }

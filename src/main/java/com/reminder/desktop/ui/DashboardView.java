@@ -99,7 +99,8 @@ public class DashboardView extends ScrollPane {
         syncBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
         syncBtn.setOnAction(e -> triggerSync());
 
-        statusBox.getChildren().addAll(connectionBadge, lastSyncLabel, syncBtn);
+        ThemeToggleSwitch headerToggle = new ThemeToggleSwitch();
+        statusBox.getChildren().addAll(connectionBadge, lastSyncLabel, syncBtn, headerToggle);
 
         headerRow.getChildren().addAll(welcomeBox, statusBox);
 

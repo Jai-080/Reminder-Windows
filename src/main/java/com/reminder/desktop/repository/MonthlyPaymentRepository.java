@@ -35,6 +35,12 @@ public class MonthlyPaymentRepository {
     }
 
     public MonthlyPayment addPayment(String name, long rawDueDate, Double amount, RecurrenceType recurrence, int customIntervalDays, String notificationOffsets) throws Exception {
+        if (recurrence == RecurrenceType.CUSTOM_DAYS) {
+            if (customIntervalDays < 1 || customIntervalDays > 365) {
+                throw new IllegalArgumentException("Custom recurrence interval must be between 1 and 365 days.");
+            }
+        }
+
         // Normalize due date to 9:00 AM on that day
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(rawDueDate);
@@ -46,6 +52,7 @@ public class MonthlyPaymentRepository {
         int originalDueDay = cal.get(Calendar.DAY_OF_MONTH);
 
         String syncStatus = (recurrence != null && recurrence.isLocalOnly()) ? "LOCAL_ONLY" : "PENDING";
+        int interval = (recurrence == RecurrenceType.CUSTOM_DAYS) ? customIntervalDays : 28;
 
         MonthlyPayment payment = new MonthlyPayment(
                 null,
@@ -59,7 +66,7 @@ public class MonthlyPaymentRepository {
                 recurrence,
                 notificationOffsets,
                 originalDueDay,
-                customIntervalDays > 0 ? customIntervalDays : 28
+                interval
         );
 
         paymentDao.insertPayment(payment);
@@ -76,6 +83,11 @@ public class MonthlyPaymentRepository {
     }
 
     public void updatePayment(MonthlyPayment payment) throws Exception {
+        if (payment.getRecurrence() == RecurrenceType.CUSTOM_DAYS) {
+            if (payment.getCustomIntervalDays() < 1 || payment.getCustomIntervalDays() > 365) {
+                throw new IllegalArgumentException("Custom recurrence interval must be between 1 and 365 days.");
+            }
+        }
         if (payment.getRecurrence() != null && payment.getRecurrence().isLocalOnly()) {
             payment.setSyncStatus("LOCAL_ONLY");
         } else if (!"SYNCED".equals(payment.getSyncStatus())) {
@@ -94,7 +106,7 @@ public class MonthlyPaymentRepository {
     }
 
     public void togglePaymentCompleted(MonthlyPayment payment) throws Exception {
-        if (payment.getRecurrence() == RecurrenceType.ONE_TIME) {
+        if (payment.getRecurrence() == RecurrenceType.ONE_TIME || payment.getRecurrence() == RecurrenceType.UNKNOWN) {
             payment.setLastPaidAt(System.currentTimeMillis());
             payment.setCompleted(true);
             if (payment.getRecurrence() != null && payment.getRecurrence().isLocalOnly()) {

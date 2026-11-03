@@ -207,7 +207,7 @@ public class PaymentDatabaseAndSchedulingTest {
         // 2. Custom Days Payment
         MonthlyPayment custom = repository.addPayment("Gym Fee", futureDue, 50.0, RecurrenceType.CUSTOM_DAYS, 14, "0");
         assertNotNull(custom.getId());
-        assertEquals("LOCAL_ONLY", custom.getSyncStatus(), "CUSTOM_DAYS must be marked LOCAL_ONLY");
+        assertEquals("PENDING", custom.getSyncStatus(), "CUSTOM_DAYS is supported by backend and must be marked PENDING");
 
         long origDue = custom.getDueDate();
         repository.togglePaymentCompleted(custom);
@@ -276,47 +276,42 @@ public class PaymentDatabaseAndSchedulingTest {
     @Order(9)
     @DisplayName("Compatibility: RecurrenceType backend support and LOCAL_ONLY flags")
     public void testRecurrenceTypeCompatibilityFlags() {
-        // Supported by backend: ONE_TIME, MONTHLY, QUARTERLY, YEARLY
-        assertTrue(RecurrenceType.ONE_TIME.isSupportedByBackend());
-        assertFalse(RecurrenceType.ONE_TIME.isLocalOnly());
-
-        assertTrue(RecurrenceType.MONTHLY.isSupportedByBackend());
-        assertFalse(RecurrenceType.MONTHLY.isLocalOnly());
-
-        assertTrue(RecurrenceType.QUARTERLY.isSupportedByBackend());
-        assertFalse(RecurrenceType.QUARTERLY.isLocalOnly());
-
-        assertTrue(RecurrenceType.YEARLY.isSupportedByBackend());
-        assertFalse(RecurrenceType.YEARLY.isLocalOnly());
-
-        // Unsupported by backend (must be LOCAL_ONLY): BI_MONTHLY, HALF_YEARLY, CUSTOM_DAYS
-        assertFalse(RecurrenceType.BI_MONTHLY.isSupportedByBackend());
-        assertTrue(RecurrenceType.BI_MONTHLY.isLocalOnly());
-
-        assertFalse(RecurrenceType.HALF_YEARLY.isSupportedByBackend());
-        assertTrue(RecurrenceType.HALF_YEARLY.isLocalOnly());
-
-        assertFalse(RecurrenceType.CUSTOM_DAYS.isSupportedByBackend());
-        assertTrue(RecurrenceType.CUSTOM_DAYS.isLocalOnly());
+        // Phase 4C/4E: All 7 standard recurrence types are supported; UNKNOWN is fallback
+        for (RecurrenceType type : RecurrenceType.values()) {
+            if (type == RecurrenceType.UNKNOWN) {
+                assertFalse(type.isSupportedByBackend(), "UNKNOWN must not be supported by backend");
+                assertTrue(type.isLocalOnly(), "UNKNOWN must be local-only");
+            } else {
+                assertTrue(type.isSupportedByBackend(), type + " must be supported by backend");
+                assertFalse(type.isLocalOnly(), type + " must not be local-only");
+            }
+        }
+        assertEquals(8, RecurrenceType.values().length);
     }
 
     @Test
     @Order(10)
-    @DisplayName("Repository: Unsupported recurrence types (BI_MONTHLY, HALF_YEARLY, CUSTOM_DAYS) are saved as LOCAL_ONLY")
-    public void testUnsupportedRecurrenceSavedAsLocalOnly() throws Exception {
+    @DisplayName("Repository: All seven recurrence types are eligible for sync and saved as PENDING")
+    public void testAllRecurrencesSavedAsPending() throws Exception {
         long futureDue = System.currentTimeMillis() + 86400000L;
 
         // 1. BI_MONTHLY
         MonthlyPayment biMonthly = repository.addPayment("Water Bill", futureDue, 40.0, RecurrenceType.BI_MONTHLY, 28, "0");
         assertNotNull(biMonthly.getId());
-        assertEquals("LOCAL_ONLY", biMonthly.getSyncStatus(), "BI_MONTHLY must be marked LOCAL_ONLY");
+        assertEquals("PENDING", biMonthly.getSyncStatus(), "BI_MONTHLY must be marked PENDING");
 
         // 2. HALF_YEARLY
         MonthlyPayment halfYearly = repository.addPayment("Insurance", futureDue, 600.0, RecurrenceType.HALF_YEARLY, 28, "0");
         assertNotNull(halfYearly.getId());
-        assertEquals("LOCAL_ONLY", halfYearly.getSyncStatus(), "HALF_YEARLY must be marked LOCAL_ONLY");
+        assertEquals("PENDING", halfYearly.getSyncStatus(), "HALF_YEARLY must be marked PENDING");
 
-        // 3. Supported: MONTHLY
+        // 3. CUSTOM_DAYS
+        MonthlyPayment customDays = repository.addPayment("Internet 45d", futureDue, 80.0, RecurrenceType.CUSTOM_DAYS, 45, "0");
+        assertNotNull(customDays.getId());
+        assertEquals("PENDING", customDays.getSyncStatus(), "CUSTOM_DAYS must be marked PENDING");
+        assertEquals(45, customDays.getCustomIntervalDays());
+
+        // 4. MONTHLY
         MonthlyPayment monthly = repository.addPayment("Rent", futureDue, 1500.0, RecurrenceType.MONTHLY, 28, "0");
         assertNotNull(monthly.getId());
         assertEquals("PENDING", monthly.getSyncStatus(), "MONTHLY is supported and should be marked PENDING");
@@ -324,6 +319,7 @@ public class PaymentDatabaseAndSchedulingTest {
         // Clean up
         paymentDao.deletePayment(biMonthly.getId());
         paymentDao.deletePayment(halfYearly.getId());
+        paymentDao.deletePayment(customDays.getId());
         paymentDao.deletePayment(monthly.getId());
     }
 
@@ -421,5 +417,93 @@ public class PaymentDatabaseAndSchedulingTest {
         // Expired reminder must not be scheduled
         reminder.setExpired(true);
         assertDoesNotThrow(() -> ReminderScheduler.getInstance().scheduleReminder(reminder));
+    }
+    // =========================================================================
+    // PHASE 4E DEFECT FIX TESTS (B2, B3, B4)
+    // =========================================================================
+
+    @Test
+    @Order(14)
+    @DisplayName("B2 & B3: CUSTOM_DAYS validation on Repository enforces 1-365 range, rejects invalid intervals")
+    public void testPhase4E_WindowsCustomDaysValidation() throws Exception {
+        long due = System.currentTimeMillis() + 86400000L;
+
+        // Valid intervals: 1, 28, 365
+        assertDoesNotThrow(() -> {
+            MonthlyPayment p1 = repository.addPayment("Custom 1 Day", due, 50.0, RecurrenceType.CUSTOM_DAYS, 1, "0");
+            assertEquals(1, p1.getCustomIntervalDays());
+            paymentDao.deletePayment(p1.getId());
+        });
+
+        assertDoesNotThrow(() -> {
+            MonthlyPayment p28 = repository.addPayment("Custom 28 Days", due, 50.0, RecurrenceType.CUSTOM_DAYS, 28, "0");
+            assertEquals(28, p28.getCustomIntervalDays());
+            paymentDao.deletePayment(p28.getId());
+        });
+
+        assertDoesNotThrow(() -> {
+            MonthlyPayment p365 = repository.addPayment("Custom 365 Days", due, 50.0, RecurrenceType.CUSTOM_DAYS, 365, "0");
+            assertEquals(365, p365.getCustomIntervalDays());
+            paymentDao.deletePayment(p365.getId());
+        });
+
+        // Invalid intervals: 0, negative, > 365 must throw IllegalArgumentException and NOT default to 28
+        assertThrows(IllegalArgumentException.class, () -> {
+            repository.addPayment("Invalid 0 Days", due, 50.0, RecurrenceType.CUSTOM_DAYS, 0, "0");
+        }, "0 days interval must be rejected");
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            repository.addPayment("Invalid Negative Days", due, 50.0, RecurrenceType.CUSTOM_DAYS, -5, "0");
+        }, "Negative interval must be rejected");
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            repository.addPayment("Invalid 366 Days", due, 50.0, RecurrenceType.CUSTOM_DAYS, 366, "0");
+        }, "Interval > 365 must be rejected");
+
+        // updatePayment validation
+        MonthlyPayment validPayment = new MonthlyPayment(
+                null, null, "Test Update Payment", due, false, System.currentTimeMillis(),
+                "LOCAL_ONLY", 10.0, RecurrenceType.CUSTOM_DAYS, "0", 1, 14
+        );
+        assertDoesNotThrow(() -> paymentDao.insertPayment(validPayment));
+
+        validPayment.setCustomIntervalDays(0);
+        assertThrows(IllegalArgumentException.class, () -> {
+            repository.updatePayment(validPayment);
+        }, "updatePayment with 0 interval must be rejected");
+
+        validPayment.setCustomIntervalDays(400);
+        assertThrows(IllegalArgumentException.class, () -> {
+            repository.updatePayment(validPayment);
+        }, "updatePayment with 400 interval must be rejected");
+
+        // Clean up
+        paymentDao.deletePayment(validPayment.getId());
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("B4: Unknown recurrence fallback to UNKNOWN without silent conversion to MONTHLY")
+    public void testPhase4E_WindowsUnknownRecurrenceFallback() {
+        assertEquals(RecurrenceType.MONTHLY, RecurrenceType.fromString(null));
+        assertEquals(RecurrenceType.MONTHLY, RecurrenceType.fromString(""));
+        assertEquals(RecurrenceType.MONTHLY, RecurrenceType.fromString("   "));
+        assertEquals(RecurrenceType.MONTHLY, RecurrenceType.fromString("MONTHLY"));
+        assertEquals(RecurrenceType.ONE_TIME, RecurrenceType.fromString("ONE_TIME"));
+        assertEquals(RecurrenceType.CUSTOM_DAYS, RecurrenceType.fromString("CUSTOM_DAYS"));
+
+        // Unknown strings must map to UNKNOWN
+        assertEquals(RecurrenceType.UNKNOWN, RecurrenceType.fromString("BI_WEEKLY"));
+        assertEquals(RecurrenceType.UNKNOWN, RecurrenceType.fromString("SEMI_ANNUAL"));
+        assertEquals(RecurrenceType.UNKNOWN, RecurrenceType.fromString("UNKNOWN_FUTURE_CADENCE"));
+
+        // Local-only and backend support
+        assertFalse(RecurrenceType.UNKNOWN.isSupportedByBackend(), "UNKNOWN must not be claimed as supported by backend");
+        assertTrue(RecurrenceType.UNKNOWN.isLocalOnly(), "UNKNOWN must be local-only");
+
+        // calculateNextDueDate does not drift or advance
+        long due = 1700000000000L;
+        long nextDue = MonthlyPayment.calculateNextDueDate(due, RecurrenceType.UNKNOWN, 15, 28, due + 5000L);
+        assertEquals(due, nextDue, "UNKNOWN recurrence must preserve due date without advancing to next month");
     }
 }

@@ -7,21 +7,33 @@ public enum RecurrenceType {
     QUARTERLY,
     HALF_YEARLY,
     YEARLY,
-    CUSTOM_DAYS;
+    CUSTOM_DAYS,
+    UNKNOWN;
 
     /**
      * Determines whether the current backend server API supports this recurrence type.
-     * The backend currently supports ONE_TIME, MONTHLY, QUARTERLY, and YEARLY.
+     * The backend supports all standard seven recurrence types.
      */
     public boolean isSupportedByBackend() {
-        return this == ONE_TIME || this == MONTHLY || this == QUARTERLY || this == YEARLY;
+        return this != UNKNOWN;
     }
 
     /**
      * Determines whether this recurrence type must be kept LOCAL_ONLY to prevent
-     * backend 500 errors during synchronization.
+     * backend errors during synchronization.
      */
     public boolean isLocalOnly() {
         return !isSupportedByBackend();
+    }
+
+    public static RecurrenceType fromString(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return MONTHLY;
+        }
+        try {
+            return RecurrenceType.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UNKNOWN;
+        }
     }
 }

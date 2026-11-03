@@ -1,6 +1,10 @@
 # build-installer.ps1
 # Automates the build and installer generation of Reminder Desktop
 
+param(
+    [string]$AppVersion = "2.1"
+)
+
 $ErrorActionPreference = "Stop"
 
 # 1. Download WiX Toolset if not present
@@ -63,7 +67,7 @@ if (-not (Test-Path $installerDest)) {
 }
 
 # 8. Run jpackage
-Write-Host "Generating MSI installer..." -ForegroundColor Cyan
+Write-Host "Generating MSI installer (version $AppVersion)..." -ForegroundColor Cyan
 & $jpackagePath `
   --type msi `
   --dest "$installerDest" `
@@ -74,14 +78,14 @@ Write-Host "Generating MSI installer..." -ForegroundColor Cyan
   --main-class com.reminder.desktop.Launcher `
   --name "Reminder" `
   --icon "src\main\resources\ic_launcher.ico" `
-  --app-version "1.2.0" `
+  --app-version "$AppVersion" `
   --vendor "Jai" `
   --win-menu `
   --win-shortcut `
   --win-dir-chooser `
   --win-per-user-install
 
-Write-Host "Generating EXE installer..." -ForegroundColor Cyan
+Write-Host "Generating EXE installer (version $AppVersion)..." -ForegroundColor Cyan
 & $jpackagePath `
   --type exe `
   --dest "$installerDest" `
@@ -90,7 +94,7 @@ Write-Host "Generating EXE installer..." -ForegroundColor Cyan
   --main-class com.reminder.desktop.Launcher `
   --name "Reminder" `
   --icon "src\main\resources\ic_launcher.ico" `
-  --app-version "1.2.0" `
+  --app-version "$AppVersion" `
   --vendor "Jai" `
   --win-menu `
   --win-shortcut `

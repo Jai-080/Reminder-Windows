@@ -193,10 +193,25 @@ public class NotesView extends ScrollPane {
             // Note Text Label
             Label textLbl = new Label(note.getText());
             textLbl.setWrapText(true);
+            textLbl.setMaxWidth(Double.MAX_VALUE);
             HBox.setHgrow(textLbl, Priority.ALWAYS);
             if (note.isCompleted()) {
                 textLbl.setStyle("-fx-text-fill: -color-text-secondary; -fx-strikethrough: true;");
             }
+
+            // Copy Button
+            Button copyBtn = new Button("Copy");
+            copyBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
+            copyBtn.setOnAction(e -> {
+                javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+                javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+                content.putString(note.getText());
+                clipboard.setContent(content);
+                copyBtn.setText("Copied!");
+                javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1200));
+                pause.setOnFinished(ev -> copyBtn.setText("Copy"));
+                pause.play();
+            });
 
             // Edit Button
             Button editBtn = new Button("Edit");
@@ -213,11 +228,13 @@ public class NotesView extends ScrollPane {
             if ("PENDING".equalsIgnoreCase(note.getSyncStatus())) {
                 Label syncLbl = new Label("Pending");
                 syncLbl.getStyleClass().addAll("badge-pill", "badge-pending");
-                controls = new HBox(8, syncLbl, editBtn, delBtn);
+                controls = new HBox(8, syncLbl, copyBtn, editBtn, delBtn);
             } else {
-                controls = new HBox(8, editBtn, delBtn);
+                controls = new HBox(8, copyBtn, editBtn, delBtn);
             }
             controls.setAlignment(Pos.CENTER_RIGHT);
+            controls.setMinWidth(Region.USE_PREF_SIZE);
+            HBox.setMargin(controls, new Insets(0, 0, 0, 16));
 
             noteCard.getChildren().addAll(completeBox, textLbl, controls);
             listContainer.getChildren().add(noteCard);

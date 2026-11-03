@@ -16,6 +16,9 @@ public class SingleInstanceManager {
     private static final String ACK_RESP = "ACK";
 
     public static boolean checkAndRegister() {
+        if (Boolean.getBoolean("reminder.force") || Boolean.getBoolean("force")) {
+            return true;
+        }
         try {
             // Try to bind to localhost port 49831
             serverSocket = new ServerSocket(PORT, 1, InetAddress.getByName("127.0.0.1"));

@@ -23,6 +23,24 @@ public class UIUtils {
         if (datePicker == null) return;
         
         datePicker.setEditable(true);
+        datePicker.setShowWeekNumbers(false);
+        datePicker.setCursor(javafx.scene.Cursor.HAND);
+
+        Platform.runLater(() -> {
+            if (datePicker.getEditor() != null) {
+                datePicker.getEditor().setCursor(javafx.scene.Cursor.HAND);
+                datePicker.getEditor().setOnMouseClicked(e -> {
+                    if (!datePicker.isShowing()) {
+                        datePicker.show();
+                    }
+                });
+            }
+            var arrowBtn = datePicker.lookup(".arrow-button");
+            if (arrowBtn != null) {
+                arrowBtn.setStyle("-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-width: 0;");
+            }
+        });
+
         datePicker.setConverter(new StringConverter<LocalDate>() {
             @Override
             public String toString(LocalDate date) {

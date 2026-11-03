@@ -351,7 +351,7 @@
     -fx-background-color: -color-on-accent;
 }
 
-/* DatePicker Unified Material Input (No clunky separate box!) */
+/* DatePicker Unified Material Input */
 .date-picker {
     -fx-background-color: -color-input-bg;
     -fx-background-radius: 12px;
@@ -360,57 +360,62 @@
     -fx-border-width: 1px;
     -fx-cursor: hand;
     -fx-alignment: center-left;
+    -fx-padding: 0;
 }
 .date-picker:focused,
 .date-picker:hover {
     -fx-border-color: -color-accent;
 }
 .date-picker > .text-field {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-background-radius: 12px 0 0 12px;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
+    -fx-background-color: transparent !important;
+    -fx-background-insets: 0 !important;
+    -fx-background-radius: 12px 0 0 12px !important;
+    -fx-border-color: transparent !important;
+    -fx-border-width: 0 !important;
     -fx-text-fill: -color-text;
     -fx-padding: 9px 12px;
     -fx-font-size: 13px;
-}
-.date-picker > .text-field:focused {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-}
-.date-picker > .button {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0 12px 12px 0;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-    -fx-padding: 0 12px 0 4px;
     -fx-cursor: hand;
 }
-.date-picker > .button:hover {
-    -fx-background-color: transparent;
+.date-picker > .text-field:focused {
+    -fx-background-color: transparent !important;
+    -fx-border-color: transparent !important;
+    -fx-border-width: 0 !important;
 }
-.date-picker > .button > .arrow-button {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-padding: 0;
+/* Completely eliminate the grey button background and insets */
+.date-picker > .arrow-button,
+.date-picker > .button,
+.date-picker .arrow-button {
+    -fx-background-color: transparent !important;
+    -fx-background-insets: 0 !important;
+    -fx-background-radius: 0 12px 12px 0 !important;
+    -fx-border-color: transparent !important;
+    -fx-border-width: 0 !important;
+    -fx-padding: 0 14px 0 6px !important;
+    -fx-cursor: hand;
 }
-/* Sleek Material Calendar Vector Icon */
-.date-picker > .button > .arrow-button > .arrow {
-    -fx-shape: "M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z";
-    -fx-background-color: -color-accent;
-    -fx-min-width: 16px;
-    -fx-min-height: 16px;
-    -fx-pref-width: 16px;
-    -fx-pref-height: 16px;
-    -fx-scale-x: 1.1;
-    -fx-scale-y: 1.1;
+.date-picker > .arrow-button:hover,
+.date-picker > .button:hover,
+.date-picker .arrow-button:hover {
+    -fx-background-color: transparent !important;
 }
-.date-picker:hover > .button > .arrow-button > .arrow,
-.date-picker > .button:hover > .arrow-button > .arrow {
-    -fx-background-color: -color-accent-hover;
+
+/* Replace the ugly calendar logo with a sleek modern dropdown chevron */
+.date-picker > .arrow-button > .arrow,
+.date-picker > .button > .arrow-button > .arrow,
+.date-picker .arrow {
+    -fx-shape: "M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" !important;
+    -fx-background-color: -color-accent !important;
+    -fx-min-width: 12px !important;
+    -fx-min-height: 7px !important;
+    -fx-pref-width: 12px !important;
+    -fx-pref-height: 7px !important;
+    -fx-max-width: 12px !important;
+    -fx-max-height: 7px !important;
+}
+.date-picker:hover > .arrow-button > .arrow,
+.date-picker:hover .arrow {
+    -fx-background-color: -color-accent-hover !important;
 }
 
 /* Dialog Modernization (Matches Material 3 Graphite & Lime) */

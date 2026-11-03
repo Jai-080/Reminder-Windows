@@ -102,8 +102,10 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         // Form Event
         scheduleBtn.setOnAction(e -> {
+            scheduleBtn.setDisable(true);
             controller.addReminder(textInput.getText(), datePicker.getValue(), timePicker.getHour(), timePicker.getMinute(), this);
             textInput.clear();
+            javafx.application.Platform.runLater(() -> scheduleBtn.setDisable(false));
         });
 
         // Register schedule listeners to refresh dynamically on fire
@@ -219,24 +221,24 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
 
         if (isPending) {
             Button rescheduleBtn = new Button("Reschedule");
-            rescheduleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
+            rescheduleBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6 10;");
             rescheduleBtn.setOnAction(e -> triggerEditDialog(reminder));
 
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
+            delBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6 10;");
             delBtn.setOnAction(e -> controller.deleteReminder(reminder, this));
 
             footer.getChildren().addAll(rescheduleBtn, delBtn);
         } else {
             // Expired card controls
             Button rescheduleBtn = new Button("Reschedule");
-            rescheduleBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
+            rescheduleBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6 10;");
             rescheduleBtn.setOnAction(e -> triggerEditDialog(reminder));
 
             Button delBtn = new Button("Delete");
             delBtn.getStyleClass().add("button-danger");
-            delBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 6;");
+            delBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6 10;");
             delBtn.setOnAction(e -> controller.deleteReminder(reminder, this));
 
             footer.getChildren().addAll(rescheduleBtn, delBtn);

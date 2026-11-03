@@ -1,11 +1,12 @@
 package com.reminder.desktop.ui;
 
 import javafx.scene.Parent;
+import com.reminder.desktop.auth.TokenStorage;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ThemeManager {
-    private static boolean darkMode = false;
+    private static boolean darkMode = TokenStorage.isDarkMode();
     private static final List<Parent> registeredRoots = new ArrayList<>();
 
     public static boolean isDarkMode() {
@@ -18,6 +19,7 @@ public class ThemeManager {
 
     public static void setDarkMode(boolean dark) {
         darkMode = dark;
+        TokenStorage.saveDarkMode(dark);
         // Apply theme changes to all open roots
         for (Parent root : new ArrayList<>(registeredRoots)) {
             applyCurrentTheme(root);

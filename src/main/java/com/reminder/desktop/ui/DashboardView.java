@@ -92,7 +92,7 @@ public class DashboardView extends ScrollPane {
 
         lastSyncLabel = new Label("Last Synced: Loading...");
         lastSyncLabel.getStyleClass().add("subtitle-label");
-        lastSyncLabel.setStyle("-fx-font-size: 11px;");
+        lastSyncLabel.setStyle("-fx-font-size: 12px;");
 
         syncBtn = new Button("Sync");
         syncBtn.getStyleClass().add("button-accent");
@@ -241,7 +241,7 @@ public class DashboardView extends ScrollPane {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         Button manageBtn = new Button("Manage");
-        manageBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 8;");
+        manageBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6 12;");
         manageBtn.setOnAction(e -> parentLayout.showView(viewName));
 
         header.getChildren().addAll(titleLbl, spacer, manageBtn);
@@ -400,7 +400,7 @@ public class DashboardView extends ScrollPane {
                     if (dashboardReminders.isEmpty()) {
                         Label lbl = new Label("No upcoming reminders");
                         lbl.getStyleClass().add("subtitle-label");
-                        lbl.setStyle("-fx-font-size: 11px;");
+                        lbl.setStyle("-fx-font-size: 12px;");
                         remindersContainer.getChildren().add(lbl);
                     } else {
                         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, hh:mm a");
@@ -416,7 +416,7 @@ public class DashboardView extends ScrollPane {
                     if (dashboardPayments.isEmpty()) {
                         Label lbl = new Label("No upcoming payments");
                         lbl.getStyleClass().add("subtitle-label");
-                        lbl.setStyle("-fx-font-size: 11px;");
+                        lbl.setStyle("-fx-font-size: 12px;");
                         paymentsContainer.getChildren().add(lbl);
                     } else {
                         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd");

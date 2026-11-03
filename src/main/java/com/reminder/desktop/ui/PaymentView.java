@@ -146,11 +146,13 @@ public class PaymentView extends ScrollPane {
                 }
             }
 
+            addBtn.setDisable(true);
             controller.addPayment(name.trim(), dueDate, amountInput.getText(), recVal, customInterval, this);
             nameInput.clear();
             amountInput.clear();
             recurrenceCombo.setValue("Monthly");
             customDaysInput.setText("28");
+            javafx.application.Platform.runLater(() -> addBtn.setDisable(false));
         });
 
         // Initial Load
@@ -329,12 +331,12 @@ public class PaymentView extends ScrollPane {
         // Controls VBox
         Button editBtn = new Button("Edit");
         editBtn.getStyleClass().add("button-secondary");
-        editBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+        editBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
         editBtn.setOnAction(e -> showEditPaymentDialog(payment));
 
         Button delBtn = new Button("Delete");
         delBtn.getStyleClass().add("button-danger");
-        delBtn.setStyle("-fx-padding: 4 8; -fx-font-size: 11px;");
+        delBtn.setStyle("-fx-padding: 6 12; -fx-font-size: 12px;");
         delBtn.setOnAction(e -> controller.deletePayment(payment, this));
 
         HBox controls = new HBox(12);

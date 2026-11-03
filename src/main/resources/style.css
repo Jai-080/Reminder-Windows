@@ -18,6 +18,7 @@
 
     -color-accent: #6554E6;
     -color-accent-hover: #5245D9;
+    -color-accent-pressed: #4135BF;
     -color-accent-light: #F4F1FF;
 
     -color-success: #0D805D;
@@ -56,6 +57,7 @@
 
     -color-accent: #9487FF;
     -color-accent-hover: #A396FF;
+    -color-accent-pressed: #786BEA;
     -color-accent-light: #252233;
 
     -color-success: #20C997;
@@ -119,7 +121,7 @@
 }
 .text-eyebrow {
     /* eyebrow — QUICK NOTES / REMINDERS / PAYMENTS card labels, agenda sub-heads */
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-accent;
 }
@@ -205,7 +207,7 @@
     -fx-background-color: -color-accent-hover;
 }
 .button-accent:pressed {
-    -fx-background-color: -color-accent;
+    -fx-background-color: -color-accent-pressed;
 }
 
 /* Danger Buttons */
@@ -220,6 +222,10 @@
 }
 .button-danger:hover {
     -fx-background-color: -color-danger-hover;
+}
+.button-danger:pressed {
+    -fx-background-color: -color-danger;
+    -fx-text-fill: -color-on-accent;
 }
 
 /* Cards */
@@ -423,7 +429,7 @@
 
 /* Badge Styling — always a soft tint fill with matching saturated text, never solid */
 .badge-pill {
-    -fx-font-size: 10px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
     -fx-padding: 3px 8px;
     -fx-background-radius: 999px;

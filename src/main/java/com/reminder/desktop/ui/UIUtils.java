@@ -50,7 +50,17 @@ public class UIUtils {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        try {
+            var res = UIUtils.class.getResource("/style.css");
+            if (res != null) {
+                alert.getDialogPane().getStylesheets().add(res.toExternalForm());
+            }
+            ThemeManager.registerRoot(alert.getDialogPane());
+        } catch (Exception ignored) {}
         alert.showAndWait();
+        try {
+            ThemeManager.unregisterRoot(alert.getDialogPane());
+        } catch (Exception ignored) {}
     }
 
     public static void showErrorAlert(String title, String content) {
@@ -80,9 +90,56 @@ public class UIUtils {
     }
 
     public static String sanitizeError(String message) {
-        if (message == null) {
-            return null;
+        if (message == null || message.trim().isEmpty()) {
+            return "An unexpected error occurred. Please try again.";
         }
+
+        String lower = message.toLowerCase();
+
+        // 1. Network connectivity and resolution errors
+        if (lower.contains("connectexception") || lower.contains("failed to connect")
+                || lower.contains("unable to resolve host") || lower.contains("unknownhostexception")
+                || lower.contains("no address associated") || lower.contains("network is unreachable")
+                || lower.contains("connection refused")) {
+            return "Unable to connect to the server. Please check your internet connection.";
+        }
+
+        // 2. Timeout errors
+        if (lower.contains("sockettimeoutexception") || lower.contains("timed out") || lower.contains("timeout")) {
+            return "Connection timed out. Please try again.";
+        }
+
+        // 3. SSL / Security handshake failures
+        if (lower.contains("sslhandshakeexception") || lower.contains("certpathvalidatorexception")
+                || lower.contains("sslpeerunverifiedexception")) {
+            return "Secure connection to server failed. Please verify your network security settings.";
+        }
+
+        // 4. Authentication / Authorization errors
+        if (lower.contains("401") || lower.contains("unauthorized")) {
+            return "Session expired or invalid credentials. Please sign in again.";
+        }
+        if (lower.contains("403") || lower.contains("forbidden")) {
+            return "Access denied. You do not have permission to perform this action.";
+        }
+
+        // 5. Server-side failures (5xx)
+        if (lower.contains("500") || lower.contains("502") || lower.contains("503") || lower.contains("504")
+                || lower.contains("internal server error") || lower.contains("bad gateway")) {
+            return "Server is temporarily unavailable. Please try again later.";
+        }
+
+        // 6. JSON / Deserialization parsing failures
+        if (lower.contains("jsonsyntaxexception") || lower.contains("malformedjsonexception")
+                || lower.contains("jsonparseexception")) {
+            return "Received an invalid response format from the server.";
+        }
+
+        // 7. Generic raw unhandled Java exceptions
+        if (message.contains("java.lang.") || message.contains("java.net.") || message.contains("Exception:")) {
+            return "An unexpected error occurred. Please try again.";
+        }
+
         String serverUrl = com.reminder.desktop.auth.TokenStorage.getServerUrl();
         if (serverUrl != null && !serverUrl.isEmpty()) {
             message = message.replace(serverUrl, "the server");

@@ -79,13 +79,7 @@ public class RegisterView extends VBox {
                 loginLink
         );
 
-        // Top action bar with theme toggle
-        javafx.scene.layout.HBox topBar = new javafx.scene.layout.HBox();
-        topBar.setMaxWidth(380);
-        topBar.setAlignment(Pos.CENTER_RIGHT);
-        topBar.getChildren().add(new ThemeToggleSwitch());
-
-        this.getChildren().addAll(topBar, card);
+        this.getChildren().add(card);
 
         // Action Triggers
         signUpBtn.setOnAction(e -> controller.handleRegister(

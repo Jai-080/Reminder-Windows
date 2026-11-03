@@ -1,8 +1,14 @@
 package com.reminder.desktop.ui;
 
 import com.reminder.desktop.config.ServerConfig;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.shape.SVGPath;
 import javafx.util.StringConverter;
 import java.time.LocalDate;
@@ -45,22 +51,55 @@ public class UIUtils {
         });
     }
 
+    public static void styleDialog(Dialog<?> dialog) {
+        if (dialog == null) return;
+        DialogPane pane = dialog.getDialogPane();
+        try {
+            var res = UIUtils.class.getResource("/style.css");
+            if (res != null) {
+                String css = res.toExternalForm();
+                if (!pane.getStylesheets().contains(css)) {
+                    pane.getStylesheets().add(css);
+                }
+            }
+            ThemeManager.registerRoot(pane);
+        } catch (Exception ignored) {}
+
+        // Style standard buttons inside button-bar with theme classes
+        Platform.runLater(() -> {
+            for (ButtonType bt : pane.getButtonTypes()) {
+                var node = pane.lookupButton(bt);
+                if (node instanceof Button btn) {
+                    if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE
+                            || bt == ButtonType.OK
+                            || bt == ButtonType.APPLY
+                            || bt == ButtonType.YES) {
+                        if (!btn.getStyleClass().contains("button-accent")) {
+                            btn.getStyleClass().add("button-accent");
+                        }
+                    } else {
+                        if (!btn.getStyleClass().contains("button")) {
+                            btn.getStyleClass().add("button");
+                        }
+                    }
+                }
+            }
+        });
+
+        dialog.setOnHidden(e -> {
+            try {
+                ThemeManager.unregisterRoot(pane);
+            } catch (Exception ignored) {}
+        });
+    }
+
     public static void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        try {
-            var res = UIUtils.class.getResource("/style.css");
-            if (res != null) {
-                alert.getDialogPane().getStylesheets().add(res.toExternalForm());
-            }
-            ThemeManager.registerRoot(alert.getDialogPane());
-        } catch (Exception ignored) {}
+        styleDialog(alert);
         alert.showAndWait();
-        try {
-            ThemeManager.unregisterRoot(alert.getDialogPane());
-        } catch (Exception ignored) {}
     }
 
     public static void showErrorAlert(String title, String content) {

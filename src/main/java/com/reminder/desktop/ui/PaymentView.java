@@ -372,6 +372,7 @@ public class PaymentView extends ScrollPane {
 
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        UIUtils.styleDialog(dialog);
 
         GridPane grid = new GridPane();
         grid.setHgap(12);

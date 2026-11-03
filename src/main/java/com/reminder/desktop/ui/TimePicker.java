@@ -14,16 +14,17 @@ public class TimePicker extends HBox {
 
     public TimePicker(int initialHour, int initialMin) {
         this.setAlignment(Pos.CENTER_LEFT);
-        this.setSpacing(6);
+        this.setSpacing(4);
         this.getStyleClass().add("time-picker-box");
-        this.setStyle("-fx-background-color: transparent; -fx-alignment: center-left;");
 
         // Hour Spinner (0-23)
         SpinnerValueFactory<Integer> hourFactory = 
             new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, initialHour);
         hourFactory.setWrapAround(true);
         hourSpinner = new Spinner<>(hourFactory);
-        hourSpinner.setPrefWidth(64);
+        hourSpinner.getStyleClass().add("time-spinner");
+        hourSpinner.setStyle("-fx-background-color: transparent; -fx-border-width: 0;");
+        hourSpinner.setPrefWidth(54);
         hourSpinner.setEditable(true);
 
         Label colon = new Label(":");
@@ -54,7 +55,9 @@ public class TimePicker extends HBox {
                 }
             }
         };
-        minSpinner.setPrefWidth(64);
+        minSpinner.getStyleClass().add("time-spinner");
+        minSpinner.setStyle("-fx-background-color: transparent; -fx-border-width: 0;");
+        minSpinner.setPrefWidth(54);
         minSpinner.setEditable(true);
 
         // Standardize focus listeners to force committing typing on focus lost

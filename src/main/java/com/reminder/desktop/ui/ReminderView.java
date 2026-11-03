@@ -252,11 +252,9 @@ public class ReminderView extends ScrollPane implements ReminderScheduler.Remind
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Edit Reminder");
         dialog.setHeaderText("Modify Reminder");
-        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-        ThemeManager.registerRoot(dialog.getDialogPane());
-
         ButtonType saveBtnType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, ButtonType.CANCEL);
+        UIUtils.styleDialog(dialog);
 
         VBox grid = new VBox(10);
         grid.setPadding(new Insets(10));

@@ -229,8 +229,7 @@ public class NotesView extends ScrollPane {
         dialog.setTitle("Edit Note");
         dialog.setHeaderText("Modify Note");
         dialog.setContentText("Note content:");
-        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-        ThemeManager.registerRoot(dialog.getDialogPane());
+        UIUtils.styleDialog(dialog);
 
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(newText -> controller.updateNoteText(note, newText, this));

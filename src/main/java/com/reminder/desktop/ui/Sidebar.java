@@ -13,6 +13,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.SVGPath;
 
 public class Sidebar extends VBox {
     private final MainLayout layout;
@@ -21,6 +22,12 @@ public class Sidebar extends VBox {
     private final Button notesBtn;
     private final Button remindersBtn;
     private final Button paymentsBtn;
+
+    // Clean Material Design Vector Icons
+    private static final String ICON_HOME = "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z";
+    private static final String ICON_NOTES = "M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z";
+    private static final String ICON_REMINDERS = "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6l-2 2v1h16v-1l-2-2z";
+    private static final String ICON_PAYMENTS = "M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z";
 
     public Sidebar(MainLayout layout, MainApplication app) {
         this.layout = layout;
@@ -52,11 +59,11 @@ public class Sidebar extends VBox {
         VBox header = new VBox(2, brandRow, appSub);
         header.setPadding(new Insets(4, 8, 20, 8));
 
-        // --- 2. NAVIGATION BUTTONS ---
-        dashBtn = createNavButton("🏠  Dashboard");
-        notesBtn = createNavButton("📝  Quick Notes");
-        remindersBtn = createNavButton("🔔  Reminders");
-        paymentsBtn = createNavButton("💳  Payments");
+        // --- 2. NAVIGATION BUTTONS (With Clean Larger SVG Icons) ---
+        dashBtn = createNavButton("Dashboard", ICON_HOME);
+        notesBtn = createNavButton("Quick Notes", ICON_NOTES);
+        remindersBtn = createNavButton("Reminders", ICON_REMINDERS);
+        paymentsBtn = createNavButton("Payments", ICON_PAYMENTS);
 
         dashBtn.setOnAction(e -> layout.showView("Dashboard"));
         notesBtn.setOnAction(e -> layout.showView("Notes"));
@@ -100,7 +107,7 @@ public class Sidebar extends VBox {
         Separator sep = new Separator();
         sep.setStyle("-fx-opacity: 0.4;");
 
-        // Exact Animated Theme Toggle Switch Row
+        // Exact Animated Theme Toggle Switch Row (Only one near logout button)
         Label themeLabel = new Label("Theme");
         themeLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: -color-text;");
         Region themeSpace = new Region();
@@ -128,10 +135,18 @@ public class Sidebar extends VBox {
         setActiveButton("Dashboard");
     }
 
-    private Button createNavButton(String text) {
+    private Button createNavButton(String text, String svgPath) {
         Button btn = new Button(text);
         btn.getStyleClass().add("sidebar-button");
         btn.setMaxWidth(Double.MAX_VALUE);
+        btn.setAlignment(Pos.CENTER_LEFT);
+
+        SVGPath icon = new SVGPath();
+        icon.setContent(svgPath);
+        icon.getStyleClass().add("sidebar-icon");
+
+        btn.setGraphic(icon);
+        btn.setGraphicTextGap(14);
         return btn;
     }
 
